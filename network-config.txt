@@ -1,0 +1,439 @@
+Files in /etc/sysconfig/network-scripts/
+========================================
+
+/etc/sysconfig/network-scripts/ifcfg-<interface-name> and
+/etc/sysconfig/network-scripts/ifcfg-<interface-name>:<alias-name>:
+
+	The first defines an interface, and the second contains
+	only the parts of the definition that are different in a
+	"alias" (or alternative) interface.  For example, the
+	network numbers might be different, but everything else
+	might be the same, so only the network numbers would be
+	in the alias file, but all the device information would
+	be in the base ifcfg file.
+
+	The items that can be defined in an ifcfg file depend on the
+	interface type.  The really obvious ones I'm not going to
+	bother to define; you can figure out what "IPADDR" is, I
+	think...	:-)
+
+	Base items:
+		NAME=<friendly name for users to see>
+			Most important for PPP.  Only used in front ends.
+		DEVICE=<name of physical device (except dynamically-allocated PPP
+			devices where it is the "logical name")>
+		IPADDRn=
+		PREFIXn=
+			Network prefix.  It is used for all configurations except aliases
+			and ippp devices.  It takes precedence over NETMASK when both
+			PREFIX and NETMASK are set.
+		NETMASKn=
+			Subnet mask; just useful for aliases and ippp devices.	For all other
+			configurations, use PREFIX instead.
+
+		The "n" is expected to be consecutive positive integers starting from 0.
+		It can be omitted if there is only one address being configured.
+
+		GATEWAY=
+		METRIC=
+			Metric for the default route using GATEWAY
+		ONBOOT=yes|no (not valid for alias devices; use ONPARENT)
+		HOTPLUG=yes|no
+		USERCTL=yes|no
+		BOOTPROTO=none|bootp|dhcp
+			'bootp' or 'dhcp' cause a DHCP client to run on the device. Any other
+			value causes any static configuration in the file to be applied.
+		VLAN=yes|no
+		MTU=
+			Default MTU for this device
+		WINDOW=
+			Default window for routes from this device
+		PEERDNS=yes|no
+			modify /etc/resolv.conf if peer uses msdns extension (PPP only) or
+			DNS{1,2} are set, or if using dhclient. default to "yes".
+		DNS{1,2}=<ip address>
+			provide DNS addresses that are dropped into the resolv.conf
+			file if PEERDNS is not set to "no".
+		SCOPE=
+			Set to "scope SCOPE-ID" to set a non-default scope for a statically
+			configured IP address.
+		SRCADDR=
+			use the specified source address for outgoing packets
+		HWADDR=
+			ethernet hardware address for this device
+		MACADDR=
+			Set the hardware address for this device to this.
+			Use of this in conjunction with HWADDR= may cause
+			unintended behavior.
+		NOZEROCONF=
+			Set this to not set a route for dynamic link-local addresses
+			over this device.
+		PERSISTENT_DHCLIENT=yes|no|1|0
+			Without this option, or if it is 'no'/'0', and BOOTPROTO=dhcp,
+			dhclient is run for the interface in "one-shot" mode; if the
+			dhcp server does not respond for a configurable timeout, then
+			dhclient exits and the interface is not brought up -
+			the '-1' option is given to dhclient.
+			If PERSISTENT_DHCLIENT=yes, then dhclient will keep on trying
+			to contact the dhcp server when it does not respond - no '-1'
+			option is given to dhclient. Note: this disables the automatic
+			checking for the presence of a link before starting dhclient.
+		DHCPRELEASE=yes|no|1|0
+			With this option set to 'yes' (1), when a dhcp configured
+			interface is brought down with 'ifdown', the lease will be
+			released. Otherwise, leases are not released.
+		DHCP_HOSTNAME=<name>
+			Sends the specified hostname to the DHCP server.
+		DHCLIENT_IGNORE_GATEWAY=yes|no|1|0
+			If set to 'yes', it will cause dhclient-script to ignore any $GATEWAY
+			setting that may be in the ifcfg file for this interface.
+			Otherwise, the dhclient session which obtains an ip-address
+			on the same subnet as $GATEWAY will set the default route
+			to be via $GATEWAY, and no other dhclient session will set
+			the default route.
+		DHCLIENTARGS=
+			Any additional arguments to dhclient.
+		NM_CONTROLLED=yes|no
+			If set to 'no', NetworkManager will ignore this connection/device.
+			Defaults to 'yes'.
+		ZONE=
+			Network zone (trust level) of this connection.
+			If not set, default zone (specified in /etc/firewalld/firewalld.conf)
+			is used. To see all available zones, run 'firewall-cmd --get-zones'.
+		ARPCHECKn=yes|no
+			If set to 'no', ifup will not try to determine, if requested ip address
+			is used by other machine in network.
+			Defaults to 'yes'.
+		IPV4_FAILURE_FATAL=yes|no
+			If set to yes, ifup-eth will end immediately after ipv4 dhclient fails.
+			Defaults to 'no'.
+
+	For dynamic addressing (BOOTPROTO=dhcp) only DEVICE needs to
+	be set; all the rest will be determined by the boot protocol.
+
+	Base items being deprecated:
+		NETWORK=<will be calculated automatically with ipcalc>
+		BROADCAST=<will be calculated automatically with ipcalc>
+
+	Alias specific items:
+		ONPARENT=yes|no
+			Whether to bring up the device when the parent device is brought
+			up.
+			Default: yes
+
+	IPv6-only items for real interfaces:
+		IPV6INIT=yes|no
+			Enable or disable IPv6 static, DHCP, or autoconf configuration for this interface
+			Default: yes
+		IPV6FORWARDING=yes|no
+			Enable or disable global forwarding of incoming IPv6 packets
+			Note: Obsolete in interface specification!
+			Default: no
+		IPV6ADDR=<IPv6 address>[/<prefix length>]
+			Specify a primary static IPv6 address here
+			Optional, if normal host and a router advertisement daemon is on local link
+			Required, if node is a router and interface should route packets
+			Note: if prefix length is omitted, 64 is assumed
+			Example:
+				IPV6ADDR="3ffe:ffff:0:5::1"
+				IPV6ADDR="3ffe:ffff:0:1::1/128"
+		IPV6ADDR_SECONDARIES="<IPv6 address>[/<prefix length>] ..." (optional)
+			A list of secondary IPv6 addresses (e.g. useful for virtual hosting)
+			Example:
+				IPV6ADDR_SECONDARIES="3ffe:ffff:0:1::10 3ffe:ffff:0:2::11/128"
+		IPV6_MTU=<MTU of link> (optional)
+			Optional, dedicated MTU of this link
+			Note: Must be greater or equal to 1280.
+			Example:
+				IPV6_MTU="1280"
+		IPV6_PRIVACY=rfc3041
+			Enables RFC 3041 IPv6 privacy support if set.
+			Default: RFC 3041 support disabled
+
+	Special configuration options for multi-homed hosts etc.
+	IPV6_ROUTER=yes|no: Controls IPv6 autoconfiguration
+	IPV6_AUTOCONF=yes|no: Controls IPv6 autoconfiguration
+	 Defaults:
+		Global IPV6FORWARDING=yes: IPV6_AUTOCONF=no, IPV6_ROUTER=yes
+		Global IPV6FORWARDING=no: IPV6_AUTOCONF=yes
+
+	Optional settings for a 6to4 tunnel
+		IPV6TO4INIT=yes|no
+			Enable or disable 6to4 tunneling setup
+			Default: no
+		IPV6TO4_RELAY=<IPv4 address> (optional)
+			IPv4 address of the remote 6to4 relay
+			Note: if this is omitted, ::192.88.99.1 (the anycast relay address) is chosen
+		IPV6TO4_IPV4ADDR=<IPv6 address>[/<prefix length>] (optional)
+			Overwrite local IPv4 address which is accessible from the Internet
+			 (optional, in case of static IPv4-NAT behind a router or other special scenarios)
+		IPV6TO4_MTU=<MTU for IPv6> (optional)
+			Controls IPv6 MTU for the 6to4 tunnel
+			Note: Must be greater or equal to 1280
+			Example:
+				IPV6TO4_MTU="1280"
+			Default: MTU of master device - 20
+		IPV6TO4_ROUTING="<device>-<suffix>/<prefix length> ..." (optional)
+			A list of routing tokens to setup proper IPv6 interfaces on the LAN
+			Example:
+				 IPV6TO4_ROUTING="eth0-:0004::1/64 eth1-:0005::1/64"
+				 Will create one address per eth0 and eth1, taking given SLA
+
+	Optional settings for a 6to4 tunnel or a ppp link
+		IPV6_CONTROL_RADVD=yes|no (optional)
+			Enable signaling radvd that the 6to4 prefix has been changed or a
+			 preconfigured dynamic device is up or down
+			Default: no
+
+	IPv6-only items for static tunnel interface:
+		Interface name: sitX (X => 1)
+		IPV6INIT=yes|no
+			Enable or disable IPv6 configuration for this interface
+			Default: no
+		IPV6TUNNELIPV4=<IPv4 address>
+			Specify IPv4 address of a foreign IPv6-in-IPv4 tunnel endpoint
+			Example:
+				IPV6TUNNELIPV4="1.2.3.4"
+		IPV6TUNNELIPV4LOCAL=<IPv4 address>
+			Specify local IPv4 address of tunnel, useful on interfaces with multiple IPv4 addresses
+		IPV6ADDR=<IPv6 address>[/<prefix length>] (optional)
+		 local IPv6 address of a numbered tunnel
+		IPV6ADDR_SECONDARIES="<IPv6 address>[/<prefix length>] ..." (optional)
+			A list of secondary IPv6 addresses (example see above)
+		IPV6_MTU=<MTU of tunnel> (optional)
+			Optional, dedicated MTU of this tunnel
+			Note: Must be greater or equal to 1280
+			Example:
+				IPV6_MTU="1280"
+
+	 IPv6-only option to enable DHCPv6 client:
+			DHCPV6C=yes|no
+			This will enable the DHCPv6 features of dhclient to be run for the interface.
+			See man dhclient(8) and dhclient.conf(5).
+			DHCPV6C_OPTIONS=...
+			This will pass given arguments to the DHCPv6 client.	For example,
+			"-S" option will request network information (e.g., DNS addresses)
+			only, not IPv6 addresses.
+
+	Ethernet-only items:
+		ARP=yes|no (adds 'arp' flag to ip, for use with the
+			ethertap device)
+		LINKDELAY=<time in seconds>
+			Time that the system should pause after the specific interface is
+			enabled.	This may be useful if one interface is connected to a
+			switch which has spanning tree enabled and must wait for STP to
+			converge before the interface should be considered usable.
+		BRIDGE=<br* device>
+			If set, the ethernet device is not assigned an address.  It is added to
+			the specified bridge device instead.
+
+	Ethernet 802.1q VLAN items:
+		 DEVICE=eth0.42
+			 Initscripts use the device name for VLAN devices.
+							 Example: eth0.42 for vlan 42 on device eth0.
+			 Valid VLAN ID range is 0-4095. Most ethernet switches reserve
+			 VLAN ID 1 to be used as management VLAN; starting from VLAN
+			 ID 2 is recommended.
+		 REORDER_HDR=yes|no
+			 When enabled the VLAN device will move the ethernet header
+			 around to make it look exactly like a real ethernet device.
+			 This may help programs such as ISC dhcpd which read the raw
+			 ethernet packet and make assumptions about the location of
+			 bytes. If you don't need it turn it off because there
+			 is a small performance penalty. Default is on.
+		 GVRP=yes|no
+			 When enabled, this will announce new vlan creation to a GVRP
+			 enabled trunk port on a switch. Default is off.
+
+	Wireless-specific items:
+		See iw(8) for additional information.
+		MODE=[Managed|Ad-Hoc|Monitor]
+		ESSID=
+			Required.
+		FREQ=
+			Required if MODE=Ad-Hoc.
+		KEY=<default WEP key>
+
+	IPSEC specific items
+		 SRC=source address. Not required.
+		 DST=destination address
+		 TYPE=IPSEC
+		 SRCNET=source net (for tunneling)
+		 DSTNET=destination network (for tunneling)
+
+	 Manual keying:
+
+		 AH_PROTO{,_IN,_OUT}=protocol to use for AH (defaults to hmac-sha1)
+		 ESP_PROTO{,_IN,_OUT}=protocol to use for ESP (defaults to 3des-cbc)
+		 AESP_PROTO{,_IN,_OUT}=protocol to use for ESP authentication (defaults to
+	hmac-sha1)
+		 KEY_AH{,_IN,_OUT}=AH key
+		 KEY_ESP{,_IN,_OUT}=ESP encryption key
+		 KEY_AESP{,_IN,_OUT}=ESP authentication key (optional)
+		 SPI_{ESP,AH}_{IN,OUT}=SPIs to use
+
+	 _IN and _OUT specifiers are for using different keys or protocols for
+	 incoming and outgoing packets.  If neither _IN or _OUT variants are set for
+	 protocols or keys, the same will be used for both.  Hexadecimal keys need to
+	 be prefixed with "0x".
+
+	 Automatic keying:
+
+		 IKE_DHGROUP=<number> (defaults to 2)
+		 IKE_METHOD=PSK|X509|GSSAPI
+				 PSK=preshared keys (shared secret)
+				 X509=X.509 certificates
+				 GSSPI=GSSAPI authentication
+		 IKE_AUTH=protocol to use for Phase 1 of SA (defaults to sha1)
+		 IKE_ENC=protocol to use for Phase 1 of SA (defaults to 3des)
+		 IKE_PSK=preshared key for this connection
+		 IKE_CERTFILE=our certificate file name for X509 IKE
+			 IKE_PEER_CERTFILE=peer public cert filename for X509 IKE
+			 IKE_DNSSEC=retrieve peer public certs from DNS
+		 (otherwise uses certificate information sent over IKE)
+
+		 To manage the racoon configuration manually (e.g. when there is more than
+		 one IPSEC configuration with the same DST), set KEYING=automatic and leave
+		 all IKE_* parameters unspecified.
+
+		 To override the identifier to use with a preshared key:
+
+			 MYID_TYPE=address|fqdn|user_fqdn
+			 MYID_VALUE=fqdn or user_fqdn string for this connection
+
+	 Usage of AH or ESP may be disabled by setting {AH,ESP}_PROTO to "none".
+
+	Bonding-specific items
+
+		SLAVE=yes
+			Specifies device as a slave
+		MASTER=bondXX
+			Specifies master device to bind to
+		BONDING_OPTS=
+			A space-separated list of options to the bonding driver for this
+			interface, such as:
+
+			"mode=active-backup arp_interval=60 arp_ip_target=192.168.1.1,192.168.1.2"
+
+	Tunnel-specific items:
+		TYPE=GRE|IPIP|IPIP6
+		MY_INNER_IPADDR=local IP address of the tunnel interface
+		PEER_OUTER_IPADDR=IP address of the remote tunnel endpoint
+		MY_OUTER_IPADDR=IP address of the local tunnel endpoint
+			If unspecified, an IP address is selected automatically for outgoing
+			tunnel packets, and incoming tunnel packets are accepted on all local
+			IP addresses.
+		PEER_INNER_IPADDR=IP address of the remote end of the tunnel interface
+			If this is specified, a route to PEER_INNER_IPADDR through the tunnel
+			is added automatically.
+		TTL=TTL value for tunnel packets
+			Default is to use the TTL of the packet transported through the tunnel
+
+	Bridge-specific items:
+		TYPE=Bridge
+		STP=off|on (see 'brctl stp')
+		DELAY=forward delay time in seconds (see 'brctl setfd')
+		BRIDGING_OPTS=
+			A space-separated list of bridging options for either the bridge
+			device, or the port device, such as:
+
+			BRIDGING_OPTS="hello_time=200 priority=65535"
+				for bridge devices, or
+			BRIDGING_OPTS="hairpin_mode=1"
+				for port devices.
+
+	TUN/TAP-specific items:
+		OWNER=<owner of the device>
+
+/etc/sysconfig/network-scripts/dip-<interface-name>
+
+	A write-only script created from the chat script by netcfg.
+	Do not modify this.  In the future, this file may disappear
+	by default and created on-the-fly from the chat script if
+	it does not exist.
+
+/etc/sysconfig/network-scripts/ifup-post
+
+	Called when any network device EXCEPT a SLIP device comes
+	up.  Calls /etc/sysconfig/network-scripts/ifup-routes to
+	bring up static routes that depend on that device.	Calls
+	/etc/sysconfig/network-scripts/ifup-aliases to bring up
+	aliases for that device.	Sets the hostname if it is not
+	already set and a hostname can be found for the IP for that
+	device.  Sends SIGIO to any programs that have requested
+	notification of network events.
+
+	Could be extended to fix up nameservice configuration, call
+	arbitrary scripts, etc, as needed.
+
+/etc/sysconfig/network-scripts/ifup-routes
+
+	Set up static routes for a device.
+
+/etc/sysconfig/network-scripts/ifup-aliases
+
+	Bring up aliases for a device.
+
+/etc/sysconfig/network-scripts/route-<interface-name>
+
+	Contains lines that specify additional routes that should be added when the
+	associated interface is brought up.
+
+	The files are processed by the ifup-routes script and uses the /sbin/ipcalc
+	utility for all network masks and numbers. Routes are specified using the
+	syntax:
+
+		ADDRESSn=<network>
+		NETMASKn=<network/prefix mask>
+		GATEWAYn=<next-hop router/gateway IP address>
+
+	The "n" is expected to be consecutive positive integers starting from 0.
+	For example:
+
+		ADDRESS0=192.168.2.0
+		NETMASK0=255.255.255.0
+		GATEWAY0=192.168.1.1
+
+	adds a network route to the 192.168.2.0 network via the gateway at
+	192.168.1.1. Since you must already have a route to the network of the
+	gateway, there is no need to specify a device.
+
+	Note: The ifup-routes script also supports an older syntax designed to be
+	used directly as an argument to "/sbin/ip route add".
+	If no "ADDRESSn" lines are found the following will still
+	work:
+
+	192.168.2.0/24 dev ppp0
+
+	adds a network route to the 192.168.2.0 network through ppp0.
+
+/etc/sysconfig/network-scripts/route6-<interface-name>
+
+	Contains lines that are arguments to "/sbin/ip -6 route add"
+	For example:
+
+	site-local route for network fec0:0:0:2::/64
+	 via gateway fec0:0:0:1:0:0:0:20 (e.g. on eth0):
+
+	fec0:0:0:2::/64 via fec0:0:0:1:0:0:0:20
+
+	additional prefix configured to be on-link on eth0:
+
+	3ffe:fffe:1:2::/64 dev eth0
+
+	6to4 route for network 3ffe:ffff:1::/48, either:
+
+	3ffe:ffff:1::/48
+	3ffe:ffff:1::/48 via ::192.168.1.2
+
+	Note the special case of 6to4 interface: 'via [relay]' is
+	automatically added if explicit 'via' wasn't specified.
+
+/etc/sysconfig/network-scripts/rule-<interface-name>
+/etc/sysconfig/network-scripts/rule6-<interface-name>
+
+	Contains lines that specify additional routing rules that should be added
+	when the associated interface is brought up.
+
+	Each non-comment line is used directly as an argument to "/sbin/ip rule add"
+	or "/sbin/ip -6 rule add" for rule6 files.

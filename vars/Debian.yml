@@ -1,0 +1,8 @@
+---
+
+network_packages:
+  - python-selinux
+  - bridge-utils
+  - ifenslave-2.6
+
+network_conf_path: "/etc/network/interfaces.d"

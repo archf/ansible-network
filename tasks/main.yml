@@ -1,0 +1,30 @@
+---
+
+# NOTE: only work on rhel derivatives for now
+
+- name: load OS specific variables (see roles/*/vars/*)
+  include_vars: "{{ ansible_os_family }}.yml"
+
+- name: install network packages
+  action: "{{ ansible_pkg_mgr }} pkg={{ item }} state=latest"
+  with_items: network_packages
+
+  # this task works for all os
+- name: template the interface cfg file
+  template: src=iface_{{ ansible_os_family }}.j2 dest={{ network_conf_path }}/ifcfg-{{ item.device }} mode=0620
+  with_items: network
+  when: network is defined
+  register: changed_network_ether
+
+  # # os specific
+# - name: template the route configuration cfg file
+  # template: src=route_{{ ansible_os_family }}.j2 dest={{ network_conf_path }}/route-{{ item.device }} mode=0620
+  # with_items: network_ether
+  # when: network_ether is defined and item.routes is defined and ansible_os_family == 'RedHat'
+  # register: changed_routes
+
+# - name: restart changed interfaces
+#   sudo: yes
+#   shell: ifdown {{ item.item.device }}; ifup {{ item.item.device }}
+#   with_items: changed_network_ether.results
+#   when: changed_network_ether is defined and item.changed

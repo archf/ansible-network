@@ -1,0 +1,9 @@
+---
+
+network_packages:
+  - libselinux-python
+  - bridge-utils
+  - iputils
+
+# network_conf_path: "/etc/sysconfig/network-scripts"
+network_conf_path: "tmp"

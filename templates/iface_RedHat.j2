@@ -1,0 +1,103 @@
+{# <name of physical device #}
+DEVICE={{ item.device }}
+{% if item.type is not defined %}
+TYPE=Ethernet
+{% if item.type|upper == 'BRIDGE' %}
+TYPE=Bridge
+{% if stp is defined  %}
+STP=on
+DELAY=1
+{% endif %}
+{% else %}
+TYPE={{ item.type }}
+{% endif %}
+{% if item.onboot is defined %}
+ONBOOT={{ item.onboot }}
+{% endif %}
+
+{# when device is part of a bridge #}
+{% if item.bridge is defined %}
+BRIDGE={{ item.bridge }}
+{% endif %}
+{% if item.linkdelay is defined %}
+{#
+  Time in seconds that the system should pause after the specific interface is
+  enabled.  This may be useful if one interface is connected to a
+  switch which has spanning tree enabled and must wait for STP to
+  converge before the interface should be considered usable.
+#}
+LINKDELAY={{ item.linkdelay|default('1') }}
+{% endif %}
+
+IPV4_FAILURE_FATAL=no
+IPV6_FAILURE_FATAL=no
+
+# always use dhcp server for stateful addressing and DDNS
+IPV6_AUTOCONF=no
+
+# configuration options for multi-homed hosts
+#IPV6_DEFROUTE=yes
+#IPV6_PEERDNS=yes
+
+{% if item.bootproto == 'static' or item.bootproto == 'none' %}
+BOOTPROTO=none
+
+{# static ipv4 configuration #}
+{% if item.ips is defined %}
+
+{% if loop.length == 1 %}
+IPADDR={{ item.ip }}
+{% endif %}
+{% if item.prefix is defined %}
+PREFIX={{ item.prefix }}
+{% endif %}
+{% if item.gw is defined %}
+GATEWAY={{ item.gw }}
+{% endif %}
+
+{% else %}
+{# loop to define multiple ips on interface #}
+{% for ip in item.ips %}
+IPADDR{{ loop.index0 }}={{ ip.ip }}
+{# only use netmask for aliases and ippp devices #}
+PREFIX{{ loop.index0 }}={{ ip.prefix }}
+GATEWAY{{ loop.index0 }}={{ ip.gw }}
+{% endfor %}
+{% endif %}
+
+{# static ipv6 configuration #}
+{% if item.ip6 is defined %}
+IPADDR={{ item.address }}
+{% endif %}
+{% if item.prefix is defined %}
+PREFIX={{ item.prefix }}
+{% endif %}
+{% if item.gw is defined %}
+GATEWAY={{ item.gw }}
+{% endif %}
+{% endif %} {# end of static configuration #}
+
+{# update resolv.conf with DNS servers received from dhcp (default to yes) #}
+{% if item.peerdns is defined and item.peerdns == 'yes'  %}
+PEERDNS=yes
+{% else %}
+{# prevent network service from updating /etc/resolv.conf with the DNS
+servers received from a DHCP server. #}
+PEERDNS=no
+
+# DNS servers
+{% if item.dns1 is defined %}
+DNS1={{ item.dns1 }}
+{% endif %}
+{% if item.dns2 is defined %}
+DNS2={{ item.dns2 }}
+{% endif %}
+{% if item.dns3 is defined %}
+DNS3={{ item.dns3 }}
+{% endif %}
+{% endif %} {# end of dns configuration #}
+
+{# dynamic configuration #}
+{% if item.bootproto == 'dhcp' %}
+BOOTPROTO=dhcp
+{% endif %}

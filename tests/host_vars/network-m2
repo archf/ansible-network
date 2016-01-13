@@ -1,0 +1,20 @@
+# one could loop over ansible_interfaces (list of ifaces)
+# for multiple ip per interface, use the ips variable (needs ip + prefix)
+
+ifaces:
+    - device: ensp9
+      onboot: yes
+      bootproto: static
+      gw: 172.16.2.1
+      prefix: 24
+      ip: 172.16.2.150
+      ips:
+        - ip: 1.1.1.1.
+          prefix: 24
+        - ip: 2.2.2.2
+          prefix: 26
+      routes:
+        - cidr: 10.247.0.0/16
+          gw: 10.0.2.1
+        - cidr: 10.247.0.6/16
+          gw: 10.0.2.1
