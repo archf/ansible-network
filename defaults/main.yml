@@ -1,2 +1,22 @@
 ---
 # defaults file for network
+
+# iface defaults
+network_onboot: 'yes'
+network_peerdns: 'no'
+network_iface_type: Ethernet
+
+# ethernet defaults
+network_ethernet_linkdelay: 1
+
+# bridge defaults
+network_bridge_delay: 1
+
+# ipv4 defaults
+network_ipv4_failure_fatal: 'no'
+
+# ipv6 defaults
+network_ipv6_failure_fatal: 'no'
+network_ipv6_autoconf: 'no'
+network_ipv6_router: 'no'
+network_ipv6_forwarding: 'no'

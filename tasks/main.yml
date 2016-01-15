@@ -6,22 +6,37 @@
   include_vars: "{{ ansible_os_family }}.yml"
 
 - name: install network packages
-  action: "{{ ansible_pkg_mgr }} pkg={{ item }} state=latest"
-  with_items: network_packages
+  package: name={{ network_packages }} state=latest
 
-  # this task works for all os
-- name: template the interface cfg file
-  template: src=iface_{{ ansible_os_family }}.j2 dest={{ network_conf_path }}/ifcfg-{{ item.device }} mode=0620
+- debug: var=network
+
+- name: template static interface cfg file for RHEL machines
+  template: src=iface_{{ ansible_os_family }}.j2 dest={{ network_conf_path }}/ifcfg-{{ item.device }} mode=0622
   with_items: network
   when: network is defined
-  register: changed_network_ether
+  register: changed_ifaces
+  notify: restart ifaces
 
-  # # os specific
-# - name: template the route configuration cfg file
-  # template: src=route_{{ ansible_os_family }}.j2 dest={{ network_conf_path }}/route-{{ item.device }} mode=0620
-  # with_items: network_ether
-  # when: network_ether is defined and item.routes is defined and ansible_os_family == 'RedHat'
-  # register: changed_routes
+- name: template the route configuration cfg file
+  template: src=route_{{ ansible_os_family }}.j2 dest={{ network_conf_path }}/route-{{ item.device }} mode=0622
+  with_subelements:
+    - network
+    - routes
+  when: item.1.routes is defined
+  notify: change routes
+
+- name: register active sytem routes
+  command: ip route
+  register: active_routes
+
+- debug: var=active_routes
+
+- fail:
+
+- name: generate list of changed route
+  set_fact:
+  register: changed_routes
+  notify: change routes
 
 # - name: restart changed interfaces
 #   sudo: yes

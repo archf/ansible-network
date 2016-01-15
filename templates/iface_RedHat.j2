@@ -1,103 +1,101 @@
 {# <name of physical device #}
 DEVICE={{ item.device }}
+ONBOOT={{ item.onboot|default(network_onboot) }}
 {% if item.type is not defined %}
-TYPE=Ethernet
-{% if item.type|upper == 'BRIDGE' %}
+TYPE={{ item.type|default(network_iface_type) }}
+{% elif (item.type is defined) and (item.type|upper == 'BRIDGE') %}
 TYPE=Bridge
-{% if stp is defined  %}
-STP=on
-DELAY=1
-{% endif %}
+{% if (item.stp is defined) and (item.stp == 'no' or item.stp == 'off') %}
+{# needs to be on if mulitple L2 devices coexist #}
+STP=off
 {% else %}
-TYPE={{ item.type }}
+STP=on
 {% endif %}
-{% if item.onboot is defined %}
-ONBOOT={{ item.onboot }}
-{% endif %}
-
-{# when device is part of a bridge #}
-{% if item.bridge is defined %}
-BRIDGE={{ item.bridge }}
-{% endif %}
-{% if item.linkdelay is defined %}
 {#
+  time spent in each of the Listening and Learning states before the Forwarding
+  state is entered. This delay is so that when a new bridge comes onto a busy
+  network it looks at some traffic before participating.
+#}
+DELAY={{ item.bridge_delay|default(network_bridge_delay) }}
+{% endif %}
+{#
+  Ethernet only:
   Time in seconds that the system should pause after the specific interface is
   enabled.  This may be useful if one interface is connected to a
   switch which has spanning tree enabled and must wait for STP to
   converge before the interface should be considered usable.
-#}
-LINKDELAY={{ item.linkdelay|default('1') }}
+  #}
+{% if (item.type is undefined) or (item.type == 'ethernet') %}
+LINKDELAY={{ item.linkdelay|default(network_ethernet_linkdelay) }}
 {% endif %}
 
-IPV4_FAILURE_FATAL=no
-IPV6_FAILURE_FATAL=no
+{# defaults to no #}
+IPV4_FAILURE_FATAL={{ network_ipv4_failure_fatal }}
+IPV6_FAILURE_FATAL={{ network_ipv6_failure_fatal }}
 
-# always use dhcp server for stateful addressing and DDNS
-IPV6_AUTOCONF=no
+# stateful addressing
+IPV6_AUTOCONF={{ item.ipv6_autoconf|default(network_ipv6_autoconf) }}
 
 # configuration options for multi-homed hosts
-#IPV6_DEFROUTE=yes
-#IPV6_PEERDNS=yes
+IPV6_ROUTER={{ item.ipv6_router|default(network_ipv6_router) }}
+{% if item.ipv6_router is defined %}
+IPV6_FORWARDING=yes
+{% else %}
+IPV6_FORWARDING=no
+{% endif %}
 
-{% if item.bootproto == 'static' or item.bootproto == 'none' %}
+{# dynamic configuration (default behavior) #}
+{% if (item.bootproto is undefined) or (item.bootproto == 'dhcp') %}
+BOOTPROTO=dhcp
+{% endif %}
+{% if (item.bootproto is defined) and (item.bootproto == 'static' or item.bootproto == 'none') %}
+# static ipv4 configuration
 BOOTPROTO=none
-
-{# static ipv4 configuration #}
-{% if item.ips is defined %}
-
-{% if loop.length == 1 %}
-IPADDR={{ item.ip }}
-{% endif %}
-{% if item.prefix is defined %}
-PREFIX={{ item.prefix }}
-{% endif %}
 {% if item.gw is defined %}
 GATEWAY={{ item.gw }}
 {% endif %}
 
-{% else %}
+{% if item.ips is defined %}
 {# loop to define multiple ips on interface #}
 {% for ip in item.ips %}
+{% if loop.length == 1 %}
+{% if ip.ip is defined %}
+IPADDR={{ ip.ip }}
+{% endif %}
+{% if ip.prefix is defined %}
+PREFIX={{ ip.prefix }}
+{% endif %}
+{% else %}
 IPADDR{{ loop.index0 }}={{ ip.ip }}
 {# only use netmask for aliases and ippp devices #}
 PREFIX{{ loop.index0 }}={{ ip.prefix }}
-GATEWAY{{ loop.index0 }}={{ ip.gw }}
-{% endfor %}
+
 {% endif %}
+{% endfor %}
+{% endif %} {# end of ipv4 static configuration #}
 
 {# static ipv6 configuration #}
 {% if item.ip6 is defined %}
-IPADDR={{ item.address }}
+{% for ip in item.ip6 %}
+{% if loop.index == 1 %}
+IPV6ADDR={{ ip }}
+{% else %}
+IPV6ADDR_SECONDAIRIES={{ ip }}
 {% endif %}
-{% if item.prefix is defined %}
-PREFIX={{ item.prefix }}
-{% endif %}
-{% if item.gw is defined %}
-GATEWAY={{ item.gw }}
-{% endif %}
+{% endfor %}
+{% endif %} {# end of ipv6 static configuration #}
 {% endif %} {# end of static configuration #}
 
 {# update resolv.conf with DNS servers received from dhcp (default to yes) #}
 {% if item.peerdns is defined and item.peerdns == 'yes'  %}
 PEERDNS=yes
 {% else %}
-{# prevent network service from updating /etc/resolv.conf with the DNS
-servers received from a DHCP server. #}
+{# prevent updating /etc/resolv.conf with OPTION 6 from server #}
 PEERDNS=no
-
-# DNS servers
-{% if item.dns1 is defined %}
-DNS1={{ item.dns1 }}
-{% endif %}
-{% if item.dns2 is defined %}
-DNS2={{ item.dns2 }}
-{% endif %}
-{% if item.dns3 is defined %}
-DNS3={{ item.dns3 }}
+{% if item.dns is defined %}
+# DNS servers (will be appended to resolv.conf)
+{% for dns in item.dns %}
+DNS{{ loop.index }}={{ dns }}
+{% endfor %}
 {% endif %}
 {% endif %} {# end of dns configuration #}
-
-{# dynamic configuration #}
-{% if item.bootproto == 'dhcp' %}
-BOOTPROTO=dhcp
-{% endif %}

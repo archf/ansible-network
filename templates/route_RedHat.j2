@@ -1,3 +1,5 @@
 {% for route in item.routes %}
-{{ route.cidr }} via {{ route.gw }} dev {{ item.device }}
+{{ route.to }} via {{ route.gw|default(item.gw) }}
 {% endfor %}
+{#{{ route.to }} via {{ route.gw|default(item.gw) }} dev {{
+route.dev|default(item.device) }}#}

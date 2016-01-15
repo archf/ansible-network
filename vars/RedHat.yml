@@ -5,5 +5,5 @@ network_packages:
   - bridge-utils
   - iputils
 
-# network_conf_path: "/etc/sysconfig/network-scripts"
-network_conf_path: "tmp"
+network_conf_path: "/etc/sysconfig/network-scripts"
+# network_conf_path: "/tmp"
