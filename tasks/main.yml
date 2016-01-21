@@ -5,41 +5,34 @@
 - name: load OS specific variables (see roles/*/vars/*)
   include_vars: "{{ ansible_os_family }}.yml"
 
-- name: install network packages
-  package: name={{ network_packages }} state=latest
-
-- debug: var=network
+# - name: install network packages
+#   package: name={{ network_packages }} state=latest
 
 - name: template static interface cfg file for RHEL machines
-  template: src=iface_{{ ansible_os_family }}.j2 dest={{ network_conf_path }}/ifcfg-{{ item.device }} mode=0622
+  template:
+    src: iface_{{ ansible_os_family }}.j2
+    dest: "{{ network_conf_path }}/ifcfg-{{ item.device }}"
+    mode: 0622
   with_items: network
   when: network is defined
   register: changed_ifaces
   notify: restart ifaces
 
-- name: template the route configuration cfg file
-  template: src=route_{{ ansible_os_family }}.j2 dest={{ network_conf_path }}/route-{{ item.device }} mode=0622
-  with_subelements:
-    - network
-    - routes
-  when: item.1.routes is defined
+- name: template the route configuration file
+  template:
+    src: route_{{ ansible_os_family }}.j2
+    dest: "{{ network_conf_path }}/route-{{ item.device }}"
+    mode: 0622
+  with_items: network
+  # when: routes is defined
   notify: change routes
 
-- name: register active sytem routes
-  command: ip route
-  register: active_routes
-
-- debug: var=active_routes
-
-- fail:
-
-- name: generate list of changed route
-  set_fact:
-  register: changed_routes
-  notify: change routes
-
-# - name: restart changed interfaces
-#   sudo: yes
-#   shell: ifdown {{ item.item.device }}; ifup {{ item.item.device }}
-#   with_items: changed_network_ether.results
-#   when: changed_network_ether is defined and item.changed
+  # get wanted permanently configured static routes
+  # ignore errors as file may not exist
+  # must be done before we template the file
+- name: register permanent system routes
+  command: cat {{ network_conf_path }}/route-{{ item.device }}
+  with_items: network
+  ignore_errors: true
+  always_run: true
+  register: network_permanent_routes

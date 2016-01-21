@@ -2,7 +2,7 @@
 DEVICE={{ item.device }}
 ONBOOT={{ item.onboot|default(network_onboot) }}
 {% if item.type is not defined %}
-TYPE={{ item.type|default(network_iface_type) }}
+TYPE={{ item.type|default(network_device_type) }}
 {% elif (item.type is defined) and (item.type|upper == 'BRIDGE') %}
 TYPE=Bridge
 {% if (item.stp is defined) and (item.stp == 'no' or item.stp == 'off') %}
@@ -15,8 +15,8 @@ STP=on
   time spent in each of the Listening and Learning states before the Forwarding
   state is entered. This delay is so that when a new bridge comes onto a busy
   network it looks at some traffic before participating.
-#}
 DELAY={{ item.bridge_delay|default(network_bridge_delay) }}
+#}
 {% endif %}
 {#
   Ethernet only:
@@ -27,22 +27,33 @@ DELAY={{ item.bridge_delay|default(network_bridge_delay) }}
   #}
 {% if (item.type is undefined) or (item.type == 'ethernet') %}
 LINKDELAY={{ item.linkdelay|default(network_ethernet_linkdelay) }}
+{# bridge to join #}
+{% if (item.bridge is defined) and (item.bridge in ansible_interfaces) %}
+BRIDGE={{ item.bridge }}
+{% endif %}
 {% endif %}
 
 {# defaults to no #}
-IPV4_FAILURE_FATAL={{ network_ipv4_failure_fatal }}
-IPV6_FAILURE_FATAL={{ network_ipv6_failure_fatal }}
+IPV4_FAILURE_FATAL={{ item.ipv4_fatal|default(network_ipv4_fatal) }}
+
+{# ipv6 options #}
+IPV6INIT={{ item.ipv6_init|default(network_ipv6_init) }}
+{% if (item.ipv6_init is defined and item.ipv6_init != 'no') or (item.ipv6_init is undefined) %}
+IPV6_FAILURE_FATAL={{ item.ipv6_fatal|default(network_ipv6_fatal) }}
 
 # stateful addressing
 IPV6_AUTOCONF={{ item.ipv6_autoconf|default(network_ipv6_autoconf) }}
 
-# configuration options for multi-homed hosts
+# ipv6 multi-homing
 IPV6_ROUTER={{ item.ipv6_router|default(network_ipv6_router) }}
+{% endif %} {# end of ipv6 configuration #}
+{#
 {% if item.ipv6_router is defined %}
 IPV6_FORWARDING=yes
 {% else %}
 IPV6_FORWARDING=no
 {% endif %}
+#}
 
 {# dynamic configuration (default behavior) #}
 {% if (item.bootproto is undefined) or (item.bootproto == 'dhcp') %}
@@ -63,12 +74,12 @@ GATEWAY={{ item.gw }}
 IPADDR={{ ip.ip }}
 {% endif %}
 {% if ip.prefix is defined %}
-PREFIX={{ ip.prefix }}
+PREFIX={{ ip.prefix|default(item.prefix) }}
 {% endif %}
 {% else %}
 IPADDR{{ loop.index0 }}={{ ip.ip }}
 {# only use netmask for aliases and ippp devices #}
-PREFIX{{ loop.index0 }}={{ ip.prefix }}
+PREFIX{{ loop.index0 }}={{ ip.prefix|default(item.prefix) }}
 
 {% endif %}
 {% endfor %}
