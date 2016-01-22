@@ -43,7 +43,6 @@ For example:
 
 List of variables to describing a device:
 
-|---------------|--------------------------------------------------|---------------------|------|
 | variable      | description                                      | value               | type |
 |---------------|--------------------------------------------------|---------------------|------|
 | device        | device name                                      | <name>              | dict |
@@ -64,7 +63,6 @@ List of variables to describing a device:
 | ip6           | static ipv6 address to configure                 | <ipv6 cidr>         | list |
 | ipv6_autoconf | stateless configuration                          | yes,no              | dict |
 | ipv6_router   | node is an ipv6 router (enables ipv6 forwarding) | yes,no              | dict |
-|---------------|--------------------------------------------------|---------------------|------|
 
 * stp is always enabled for bridge devices unless you explicitly turn it off
 * `bootproto` defaults to 'dhcp' if ommited
@@ -73,33 +71,27 @@ List of variables to describing a device:
 
 Variables `ips`:
 
-|-----------|----------------|-----------------------|------|
 | Variables | description    | value                 | type |
 |-----------|----------------|-----------------------|------|
 | ip        | <ipv4 address> | quad dotted ip        | dict |
 | prefix    | subnet prefix  | integer in range 0-32 | dict |
-|-----------|----------------|-----------------------|------|
 
 If list contains multiple elements, aliases will be created
 
 Variables `ip6`:
 
-|-----------|------------------------------------|
 | Variables | description                        |
 |-----------|------------------------------------|
 | n/a       | ipv6 address list in cidr notation |
-|-----------|------------------------------------|
 
 * Note: if addr not in cidr notation, will default to a /64 prefix.
 
 routes:
 
-|-----------|--------------|---------------------------------------------|------|
 | Variables | description  | value                                       | type |
 |-----------|--------------|---------------------------------------------|------|
 | to        | route target | cidr ip (or any value accepted by ip route) | dict |
 | gw        | gw device    | /32 ip address*                             | dict |
-|-----------|--------------|---------------------------------------------|------|
 
 * Note: if no gw is provided, it will default to the device gateway
 

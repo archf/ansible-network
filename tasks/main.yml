@@ -5,8 +5,8 @@
 - name: load OS specific variables (see roles/*/vars/*)
   include_vars: "{{ ansible_os_family }}.yml"
 
-# - name: install network packages
-#   package: name={{ network_packages }} state=latest
+- name: install network packages
+  package: name={{ network_packages }} state=latest
 
 - name: template static interface cfg file for RHEL machines
   template:
