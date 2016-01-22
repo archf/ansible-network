@@ -12,7 +12,7 @@
   template:
     src: iface_{{ ansible_os_family }}.j2
     dest: "{{ network_conf_path }}/ifcfg-{{ item.device }}"
-    mode: 0622
+    mode: 0644
   with_items: network
   when: network is defined
   register: changed_ifaces
@@ -22,7 +22,7 @@
   template:
     src: route_{{ ansible_os_family }}.j2
     dest: "{{ network_conf_path }}/route-{{ item.device }}"
-    mode: 0622
+    mode: 0644
   with_items: network
   # when: routes is defined
   notify: change routes
