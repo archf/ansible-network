@@ -1,45 +1,17 @@
 Role Name
 =========
 
-Network configuration of tar
+Configure network devices on a target host.
 
 Requirements
 ------------
 
-Create network bridge for lxc on fedora
-
-```xml
-cat ~/lxcbr0.xml
-<network>
-  <name>lxcbr0</name>
-  <bridge name="lxcbr0"/>
-  <forward/>
-  <ip address="192.168.3.1" netmask="255.255.255.0">
-    <dhcp>
-      <range start="192.168.3.2" end="192.168.3.254"/>
-    </dhcp>
-  </ip>
-</network>
-```
-
-sudo virsh net-define --file  ~/lxcbr0.xml
-sudo virsh net-autostart lxcbr0
-sudo virsh net-start lxcbr0
+For Ethernet devices, you must know your device name beforehand.
 
 Role Variables
 --------------
 
-On fedora, redhat / centos
-
-## Device configuration
-
-You must define a network variable wich contain a list of devices.
-
-For example:
-
-```yaml
-
-```
+## Device variables
 
 List of variables to describing a device:
 
@@ -58,6 +30,7 @@ List of variables to describing a device:
 | dns           | list of dns to override resolv.conf with         | see example         | list |
 | linkdelay     | wait time for ethernet, (stp converence)         | <seconds>           | dict |
 | routes        | list of static routes to add                     | see routes table    | list |
+| ipv6_init     | enable ipv6                                      | yes,no              | dict |
 | ipv6_fatal    | disable device on failure                        | yes,no              | dict |
 | ipv4_fatal    | disable device on failure                        | yes,no              | dict |
 | ip6           | static ipv6 address to configure                 | <ipv6 cidr>         | list |
@@ -114,6 +87,7 @@ network_bridge_delay: 1
 network_ipv4_fatal: 'no'
 
 # ipv6 defaults
+network_ipv6_init: 'yes'
 network_ipv6_fatal: 'no'
 network_ipv6_autoconf: 'no'
 network_ipv6_router: 'no'
@@ -125,25 +99,38 @@ You can map those variables to the matching unprefixed variable inside a device.
 Dependencies
 ------------
 
-For Ethernet devices, you must know your device name beforehand.
+Netaddr python module.
 
 Example Playbook
 ----------------
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+## Device configuration
 
-    - hosts: servers
-      roles:
-         - { role: archf.ansible-network }
+You must define a network variable wich contain a list of devices.
+
+For example:
+
+And invoke your play as usual:
+
+```yaml
+- hosts: servers
+  roles:
+      - { role: archf.ansible-network }
+```
 
 Todo
------------------
+------
 
 * improve route template
   * scope support
   * type support
+* make use of cidr notation everywhere and use python module netaddr
 * improve device handler -> reconfigure a live ip interface with ip commands
 * make it work on ubuntu//debian
+* enable ipv6 nating on linux bridges
+  * ipv6/conf/all/forwarding=1
+  * /net/ipv6/conf/${BRIDGE}/autoconf=0
+  * ip6tables -w -t nat -A POSTROUTING -s ${IPV6_NETWORK} ! -d ${IPV6_NETWORK} -j
 
 PR welcomed !!!
 
