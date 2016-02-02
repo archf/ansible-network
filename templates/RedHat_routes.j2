@@ -9,7 +9,6 @@ default via dev {{ item.device }}
   static ips for device, useful for local nating brigdes
   creating the file avoids duplicated default gateway issues
   when restarting the network service
-{{ ip | ipaddr('network') }}ip via {{ item.gw }}
 #}
 {% for ip in item.ips %}
 {{ ip | ipsubnet(ip | ipaddr('prefix'),0) }} via {{ item.gw }}

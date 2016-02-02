@@ -6,26 +6,48 @@
   include_vars: "{{ ansible_os_family }}.yml"
 
 - name: install network packages
-  package: name={{ network_packages }} state=latest
+  package: name={{ network_pkgs }} state=latest
 
-- name: template static interface cfg file for RHEL machines
+- name: template network devices files for RHEL machines
   template:
-    src: iface_{{ ansible_os_family }}.j2
+    src: "{{ ansible_os_family }}_device.j2"
     dest: "{{ network_conf_path }}/ifcfg-{{ item.device }}"
     mode: 0644
   with_items: network
-  when: network is defined
+  when: network is defined and ansible_os_family == 'RedHat'
   register: changed_ifaces
   notify: restart ifaces
 
-- name: template the route configuration file
+- name: template the route configuration files for RHEL machines
   template:
-    src: route_{{ ansible_os_family }}.j2
+    src: "{{ ansible_os_family }}_routes.j2"
     dest: "{{ network_conf_path }}/route-{{ item.device }}"
     mode: 0644
   with_items: network
-  # when: routes is defined
+  when: network is defined and ansible_os_family == 'RedHat'
   notify: change routes
+
+- name: template main network device file for Debian machines
+  template:
+    src: "{{ ansible_os_family }}_interfaces.j2"
+    dest: "{{ network_conf_path }}/interfaces"
+    mode: 0644
+  with_items: network
+  when: network is defined and ansible_os_family == 'Debian'
+  register: changed_ifaces
+  notify: restart ifaces
+
+- name: template network devices files for Debian machines
+  template:
+    src: "{{ ansible_os_family }}_device.j2"
+    dest: "{{ network_conf_path }}/interfaces.d/{{ item.device }}"
+    mode: 0644
+  with_items: network
+  when: network is defined and ansible_os_family == 'Debian'
+  register: changed_ifaces
+  notify: restart ifaces
+
+- fail:
 
   # get wanted permanently configured static routes
   # ignore errors as file may not exist

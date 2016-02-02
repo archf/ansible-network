@@ -1,6 +1,8 @@
 ---
 # defaults file for network
 
+network_pkg_state: latest
+
 # device defaults
 network_onboot: 'yes'
 network_peerdns: 'no'

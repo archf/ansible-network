@@ -1,12 +1,14 @@
 Role Name
 =========
 
-Configure network devices on a target host.
+Configure network devices on a target host. This roles aims to provide a seemless
+rhel or debian derivatives configuration experience. Templates are meant to
+be modular and reusable.
 
 Requirements
 ------------
 
-For Ethernet devices, you must know your device name beforehand.
+For Ethernet devices, you must know your devices' names beforehand.
 
 Role Variables
 --------------
@@ -99,7 +101,7 @@ You can map those variables to the matching unprefixed variable inside a device.
 Dependencies
 ------------
 
-Netaddr python module.
+python-netaddr.
 
 Example Playbook
 ----------------
@@ -115,7 +117,7 @@ And invoke your play as usual:
 ```yaml
 - hosts: servers
   roles:
-      - { role: archf.ansible-network }
+      - { role: archf.network }
 ```
 
 Todo
@@ -127,6 +129,7 @@ Todo
 * make use of cidr notation everywhere and use python module netaddr
 * improve device handler -> reconfigure a live ip interface with ip commands
 * make it work on ubuntu//debian
+* ovs support
 * enable ipv6 nating on linux bridges
   * ipv6/conf/all/forwarding=1
   * /net/ipv6/conf/${BRIDGE}/autoconf=0
