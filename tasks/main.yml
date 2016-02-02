@@ -8,13 +8,23 @@
 - name: install network packages
   package: name={{ network_pkgs }} state=latest
 
-- name: template network devices files for RHEL machines
+- name: template /etc/network/interfaces on Debian machines
   template:
-    src: "{{ ansible_os_family }}_device.j2"
-    dest: "{{ network_conf_path }}/ifcfg-{{ item.device }}"
+    src: "{{ ansible_os_family }}_interfaces.j2"
+    dest: "{{ network_conf_path }}/interfaces"
     mode: 0644
   with_items: network
-  when: network is defined and ansible_os_family == 'RedHat'
+  when: network is defined and ansible_os_family == 'Debian'
+  register: changed_ifaces
+  notify: restart ifaces
+
+- name: template network devices files
+  template:
+    src: "{{ ansible_os_family }}_device.j2"
+    dest: "{{ network_conf_path }}/{{network_device_file_prefix}}{{ item.device }}"
+    mode: 0644
+  with_items: network
+  when: network is defined
   register: changed_ifaces
   notify: restart ifaces
 
@@ -27,25 +37,14 @@
   when: network is defined and ansible_os_family == 'RedHat'
   notify: change routes
 
-- name: template main network device file for Debian machines
-  template:
-    src: "{{ ansible_os_family }}_interfaces.j2"
-    dest: "{{ network_conf_path }}/interfaces"
-    mode: 0644
-  with_items: network
-  when: network is defined and ansible_os_family == 'Debian'
-  register: changed_ifaces
-  notify: restart ifaces
+- debug: msg={{ network|map(attribute='device')|list}}
 
-- name: template network devices files for Debian machines
-  template:
-    src: "{{ ansible_os_family }}_device.j2"
-    dest: "{{ network_conf_path }}/interfaces.d/{{ item.device }}"
-    mode: 0644
-  with_items: network
-  when: network is defined and ansible_os_family == 'Debian'
-  register: changed_ifaces
-  notify: restart ifaces
+- name: cleanup unrequired devices
+  file:
+    dest: "{{ network_conf_path }}/{{network_device_file_prefix}}{{ item }}"
+    state: absent
+  with_items: ansible_interfaces
+  when: item not in "{{ network|map(attribute='device')|list }}" and item not in network_unmanaged_devices
 
 - fail:
 

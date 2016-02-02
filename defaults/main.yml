@@ -1,7 +1,14 @@
 ---
 # defaults file for network
 
+network_unmanaged_devices:
+  - lo
+  - ovs-system
+  - vboxnet0
+  - lxcbr0
+
 network_pkg_state: latest
+network_: present
 
 # device defaults
 network_onboot: 'yes'

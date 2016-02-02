@@ -9,3 +9,4 @@ network_pkgs:
 network_ovs_service: openvswitch-nonetwork.service
 
 network_conf_path: "/etc/network"
+network_device_file_prefix: ""
