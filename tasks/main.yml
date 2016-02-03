@@ -15,7 +15,7 @@
     mode: 0644
   with_items: network
   when: network is defined and ansible_os_family == 'Debian'
-  register: changed_ifaces
+  register: changed_devices
   notify: restart ifaces
 
 - name: template network devices files
@@ -25,7 +25,7 @@
     mode: 0644
   with_items: network
   when: network is defined
-  register: changed_ifaces
+  register: changed_devices
   notify: restart ifaces
 
 - name: template the route configuration files for RHEL machines
@@ -45,8 +45,8 @@
     state: absent
   with_items: ansible_interfaces
   when: item not in "{{ network|map(attribute='device')|list }}" and item not in network_unmanaged_devices
-
-- fail:
+  register: deleted_devices
+  notify: del devices
 
   # get wanted permanently configured static routes
   # ignore errors as file may not exist

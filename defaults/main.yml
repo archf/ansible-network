@@ -1,14 +1,7 @@
 ---
 # defaults file for network
 
-network_unmanaged_devices:
-  - lo
-  - ovs-system
-  - vboxnet0
-  - lxcbr0
-
 network_pkg_state: latest
-network_: present
 
 # device defaults
 network_onboot: 'yes'
@@ -30,3 +23,10 @@ network_ipv6_fatal: 'no'
 network_ipv6_autoconf: 'no'
 network_ipv6_router: 'no'
 network_ipv6_forwarding: 'no'
+
+# prevent deletion on cleanup
+network_unmanaged_devices:
+  - lo
+  - ovs-system
+  - vboxnet0
+  - vibr0
