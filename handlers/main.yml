@@ -8,9 +8,9 @@
   # service: name=network state=restarted
 
 - name: del devices
-  command: ip link del dev {{ item.item.device }}
-  with_items: deleted_ifaces.results
-  when: item.changed
+  shell: ip link delete {{ item }} || ovs-vsctl del-br {{item}}
+  with_items: ansible_interfaces
+  when: item not in "{{ network|map(attribute='device')|list }}" and item not in network_unmanaged_devices
 
   # # edit change iface without restarting interface
 # - name: change ip

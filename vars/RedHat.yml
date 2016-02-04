@@ -4,9 +4,9 @@ network_pkgs:
   - libselinux-python
   - bridge-utils
   - iputils
-  - openvswitch
 
 network_ovs_service: openvswitch.service
+network_ovs_pkg: openvswitch
 
 network_conf_path: "/etc/sysconfig/network-scripts"
 network_device_file_prefix: "ifcfg-"

@@ -6,7 +6,11 @@
   include_vars: "{{ ansible_os_family }}.yml"
 
 - name: install network packages
-  package: name={{ network_pkgs }} state=latest
+  package: name={{ network_pkgs }} state={{ network_pkg_state }}
+
+- name: install openvswitch package only when required
+  package: name={{ network_ovs_pkg }} state={{ network_pkg_state }}
+  when: "'obsbridge' in network|selectattr('type', 'defined')|map(attribute='type')|list"
 
 - name: template /etc/network/interfaces on Debian machines
   template:
@@ -39,13 +43,12 @@
 
 - debug: msg={{ network|map(attribute='device')|list}}
 
-- name: cleanup unrequired devices
+- name: cleanup unrequired devices files
   file:
     dest: "{{ network_conf_path }}/{{network_device_file_prefix}}{{ item }}"
     state: absent
   with_items: ansible_interfaces
   when: item not in "{{ network|map(attribute='device')|list }}" and item not in network_unmanaged_devices
-  register: deleted_devices
   notify: del devices
 
   # get wanted permanently configured static routes
