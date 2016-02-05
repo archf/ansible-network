@@ -65,7 +65,6 @@ BOOTPROTO=dhcp
 {% if (item.bootproto is defined) and (item.bootproto == 'static' or item.bootproto == 'none') %}
 BOOTPROTO=none
 
-{# split inet stacks in two var #}
 # static ipv4 configuration
 {% if item.gw is defined %}
 GATEWAY={{ item.gw | ipv4('address') }}

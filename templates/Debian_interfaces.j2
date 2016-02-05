@@ -5,5 +5,9 @@ auto lo
 iface lo inet loopback
 iface lo inet6 loopback
 
-# All devices can be found in {{ network_conf_path }}/interfaces.d/
-source {{ network_conf_path }}/interfaces.d/*
+# All configured devices can be found in {{ network_conf_path }}/
+{# using a loop while ifupdown2 is not available yet #}
+{% for i in network %}
+source {{ network_conf_path }}/{{i.device}}
+{% endfor %}
+{# source {{ network_conf_path }}/* #}

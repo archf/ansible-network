@@ -1,12 +1,11 @@
 ---
 
 network_pkgs:
-  - python-selinux
   - bridge-utils
-  - ifenslave-2.6
+  - ifenslave
 
 network_ovs_service: openvswitch-nonetwork.service
 network_ovs_pkg: openvswitch-switch
 
-network_conf_path: "/etc/network"
-network_device_file_prefix: ""
+network_conf_path: "/etc/network/interfaces.d"
+network_device_file_prefix: ''

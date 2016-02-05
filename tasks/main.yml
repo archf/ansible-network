@@ -5,28 +5,28 @@
 - name: load OS specific variables (see roles/*/vars/*)
   include_vars: "{{ ansible_os_family }}.yml"
 
-- name: install network packages
-  package: name={{ network_pkgs }} state={{ network_pkg_state }}
+# - name: install network packages
+#   package: name={{ network_pkgs }} state={{ network_pkg_state }}
 
-- name: install openvswitch package only when required
-  package: name={{ network_ovs_pkg }} state={{ network_pkg_state }}
-  when: "'obsbridge' in network|selectattr('type', 'defined')|map(attribute='type')|list"
+# - name: install openvswitch package only when required
+#   package: name={{ network_ovs_pkg }} state={{ network_pkg_state }}
+#   when: "'obsbridge' in network|selectattr('type', 'defined')|map(attribute='type')|list"
 
-- name: start and enable openvswitch package only when required
-  service: name={{ network_ovs_service }} state=started
-  when: "'obsbridge' in network|selectattr('type', 'defined')|map(attribute='type')|list"
+# - name: start and enable openvswitch package only when required
+#   service: name={{ network_ovs_service }} state=started
+#   when: "'obsbridge' in network|selectattr('type', 'defined')|map(attribute='type')|list"
 
 - name: template /etc/network/interfaces on Debian machines
   template:
     src: "{{ ansible_os_family }}_interfaces.j2"
-    dest: "{{ network_conf_path }}/interfaces"
+    dest: /etc/network/interfaces
     mode: 0644
   with_items: network
   when: network is defined and ansible_os_family == 'Debian'
   register: changed_devices
   notify: restart ifaces
 
-- name: template network devices files
+- name: template network devices' files
   template:
     src: "{{ ansible_os_family }}_device.j2"
     dest: "{{ network_conf_path }}/{{network_device_file_prefix}}{{ item.device }}"
@@ -35,6 +35,8 @@
   when: network is defined
   register: changed_devices
   notify: restart ifaces
+
+- fail:
 
 - name: template the route configuration files for RHEL machines
   template:

@@ -1,5 +1,5 @@
-Role Name
-=========
+ansible-network
+===============
 
 Configure network devices on a target host. This roles aims to provide a seemless
 rhel or debian derivatives configuration experience.

@@ -1,0 +1,16 @@
+{# inet #}
+{% if item.ips is defined and item.gw is defined %}
+{% for ip in item.ips | ipv4('host/prefix') %}
+{# add first ip normally #}
+{% if loop.index == 1 %}
+  address     {{ ip | ipaddr('address') }}
+  network     {{ ip | ipaddr('network') }}
+  netmask     {{ ip | ipaddr('netmask') }}
+  broadcast   {{ ip | ipaddr('broadcast') }}
+  gateway     {{ item.gw | ipv4 }}
+{% else %}
+{# add  all other ips as secondaries #}
+  post-up ip addr add {{ ip }} dev {{ item.device }}
+{% endif %}
+{% endfor %}
+{% endif %}

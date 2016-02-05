@@ -1,59 +1,42 @@
-{% if item.onboot is defined %}
+{% if item.onboot is undefined and item.type is undefined %}
+{# this is a physical Ethernet device #}
 auto {{ item.device }}
+{# to avoid race conditions at boot in between ifupdown and openvswitch #}
+{% elif item.type is defined and item.type|lower == 'ovsbridge' %}
+allow-ovs {{ item.device }}
 {% endif %}
 
-{# inet #}
+{% set inets = ['inet', 'inet6'] %}
+{% for inet in inets %}
+
+{# dhcp method by default #}
 {% if (item.bootproto is undefined) or (item.bootproto == 'dhcp') %}
-iface {{ item.device }} inet dhcp
+iface {{ item.device }} {{inet}} dhcp
 {% elif (item.bootproto is defined) and (item.bootproto == 'static' or item.bootproto == 'none') %}
-iface {{ item.device }} inet static
-{% if item.ip is defined %}
-    address     {{ item.ip | ipaddr('address') }}
-    network     {{ item.ip | ipaddr('network') }}
-    netmask     {{ item.ip | ipaddr('address/prefix') }}
-    broadcast   {{ item.ip | ipaddr('broadcast') }}
-    gateway     {{ item.gw }}
+iface {{ item.device }} {{inet}} static
+{% if inet == 'inet' %}
+{# debian ipv4 family configuration #}
+{% include 'inet.j2' %}
+{% elif inet == 'inet6' %}
+{% include 'inet6.j2' %}
 {% endif %}
+{# routes configuration #}
+{% include 'routes.j2' %}
 {% elif item.bootproto is defined and item.bootproto == 'bootp' %}
-iface {{ item.device }} inet bootp
-{% if item.bootfile is defined %}
-    bootfile {{ item.bootfile }}
-{% endif %}
-{% if item.server is defined %}
-    server {{ item.server }}
-{% endif %}
+{# bootp options #}
+iface {{ item.device }} {{ inet }} bootp
+{% include 'bootp.j2' %}
 {% elif item.bootproto is defined and item.bootproto == '6to4' %}
+{# 6to4 tunnel options #}
 iface {{ item.device }} inet 6to4
-{% if item.ip is defined %}
-   local {{ item.ip }}
+{% include '6to4.j2' %}
 {% endif %}
-{% if item.ttl is defined %}
-   ttl {{ item.ttl }}
-{% endif %}
-{% endif %} {# end of method logic #}
-{% if item.scope is defined %}
-    scope {{ item.scope }}
-{% endif %}
-{% if item.metric is defined %}
-    scope {{ item.metric }}
-{% endif %}
-{% if item.hwaddress is defined %}
-    hwaddress {{ item.hwaddress }}
-{% endif %}
-{% if item.mtu is defined %}
-    hwaddress {{ item.mtu }}
-{% endif %}
+{# configure device as a bridge #}
 {# see man bridge-utils-interfaces(5) for bridge details #}
-{# {% if item.type is defined and item.type|lower == 'bridge' %} #}
-{% if item.bridge_ports is defined %}
-    bridge_ports  {{ item.bridge_ports|join(' ') }}
-{% elif item.type is defined and item.type|lower == 'bridge' %}
-    bridge_ports  none
-{% endif %}
-{% if item.bridge_opts is defined %}
-{% for key,value in bridge_opts.iter() %}
-    {{ key }}   {{ value }}
-{% endfor %}
+{% if item.type is defined and item.type|lower == "bridge" %}
+{% include 'linux_bridge.j2' %}
+{% elif item.type is defined and item.type|lower == 'ovsbridge' %}
+{% include 'ovsbridge.j2' %}
 {% endif %}
 
-{# inet6 #}
+{% endfor %} {# end if inet loop #}
