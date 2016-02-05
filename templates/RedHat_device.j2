@@ -37,7 +37,8 @@ LINKDELAY={{ item.linkdelay|default(network_ethernet_linkdelay) }}
 {% if (item.bridge is defined) and (item.bridge in ansible_interfaces) %}
 BRIDGE={{ item.bridge }}
 {% endif %}
-{% endif %} {# end of ethernet only options #}
+{# end of ethernet only options #}
+{% endif %}
 
 {# defaults to no #}
 IPV4_FAILURE_FATAL={{ item.ipv4_fatal|default(network_ipv4_fatal) }}
@@ -50,7 +51,7 @@ IPV6_FAILURE_FATAL={{ item.ipv6_fatal|default(network_ipv6_fatal) }}
 # stateful addressing
 IPV6_AUTOCONF={{ item.ipv6_autoconf|default(network_ipv6_autoconf) }}
 
-# ipv6 multi-homing
+# ipv6
 IPV6_ROUTER={{ item.ipv6_router|default(network_ipv6_router) }}
 {% endif %} {# end of ipv6 configuration #}
 {% if item.ipv6_router is defined %}
@@ -112,4 +113,5 @@ PEERDNS=no
 DNS{{ loop.index }}={{ dns }}
 {% endfor %}
 {% endif %}
-{% endif %} {# end of dns configuration #}
+{# end of dns configuration #}
+{% endif %}
