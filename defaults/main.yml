@@ -17,12 +17,26 @@ network_bridge_delay: 1
 # ipv4 defaults
 network_ipv4_fatal: 'no'
 
-# ipv6 defaults
+# RHEL ipv6 defaults
 network_ipv6_init: 'yes'
 network_ipv6_fatal: 'no'
 network_ipv6_autoconf: 'no'
 network_ipv6_router: 'no'
 network_ipv6_forwarding: 'no'
+
+# Debian ifupdown ipv6 defaults
+# see http://manpages.ubuntu.com/manpages/wily/en/man5/interfaces.5.html
+
+# accept_ra default value differ according to method
+#   dhcp -> 1
+#   static -> 2
+#   auto -> 2
+network_accept_ra: 1        # (0=off, 1=on, 2=on+forwarding)
+network_dhcp: 0             # auto method -> use stateless DHCPv6 (0=off, 1=on)
+
+network_autoconf: 0         # Perform stateless autoconfiguration (0=off, 1=on)
+network_dad_attempts: 60    # Number of attempts to settle DAD (0 to disable)
+network_dad_interval: 0.1   # DAD state polling interval in seconds
 
 # prevent deletion on cleanup
 network_unmanaged_devices:

@@ -10,5 +10,3 @@ network_ovs_pkg: openvswitch
 
 network_conf_path: "/etc/sysconfig/network-scripts"
 network_device_file_prefix: "ifcfg-"
-
-# network_conf_path: "/tmp"

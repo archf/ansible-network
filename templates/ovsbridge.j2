@@ -1,0 +1,16 @@
+  ovs_type  OVSBridge
+{% if inet == 'inet' %}
+{% endif %}
+{% if item.bridge_ports is defined %}
+  ovs_port  {{ item.bridge_ports|join(' ') }}
+{#
+  todo: other options to implement later on
+  see https://github.com/openvswitch/ovs/blob/abc67c1e71fe88d6351c59f7710a73dd2630857b/debian/openvswitch-switch.README.Debian
+  ovs_bridge
+  ovs_bonds
+  ovs_patch_peer
+  ovs_tunnel_type
+  ovs_tunnel_options
+  ovs_extra
+#}
+{% endif %}

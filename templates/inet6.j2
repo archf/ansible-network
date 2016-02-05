@@ -1,0 +1,30 @@
+{# inet #}
+{% if item.ips is defined and item.gw is defined %}
+{% set ipv6 = item.ips | ipv6 %}
+{# add first ip normally #}
+  address   {{ ipv6[0] }}
+{#
+  netmask     {{ ipv6[0] | ipaddr('netmask') }}
+  broadcast   {{ ipv6[0] | ipaddr('broadcast') }}
+#}
+{% if ipv6|length > 1 %}
+{% for ip in ipv6[1:] %}
+{# add all other ips as secondaries #}
+  post-up ip addr add {{ ip }} dev {{ item.device }}
+{% endfor %}
+{% endif %}
+{% endif %}
+{# insert other inet6 options #}
+{% if item.accept_ra is defined %}
+  accept_ra   {{ item.accept_ra }}
+{% endif %}
+{# Perform stateless dhcpv6 #}
+{% if item.dhcp is defined %}
+  dhcp  {{ item.dhcp }}
+{% endif %}
+{# Perform stateless autoconfiguration #}
+  autoconf  {{ item.autoconf|default(network_autoconf) }}
+{# dad configuration (static method only) #}
+  dad-attempts  {{ item.dad_attempts|default(network_dad_attempts) }}
+  dad-interval  {{ item.dad_interval|default(network_dad_interval) }}
+

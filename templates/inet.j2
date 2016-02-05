@@ -1,0 +1,21 @@
+{# inet #}
+{% if item.ips is defined and item.gw is defined %}
+{% set ipv4 = item.ips | ipv4 %}
+{# add first ip normally #}
+  address   {{ ipv4[0] }}
+{#
+address     {{ ip | ipaddr('address') }}
+address     {{ ip | ipaddr('address') }}
+network     {{ ip | ipaddr('network') }}
+netmask     {{ ip | ipaddr('netmask') }}
+broadcast   {{ ip | ipaddr('broadcast') }}
+gateway     {{ item.gw | ipv4 }}
+#}
+{% if ipv4|length > 1 %}
+{# add all other ips as secondaries #}
+{% for ip in ipv4[1:] %}
+  post-up     ip addr add {{ ip }} dev {{ item.device }}
+{% endfor %}
+{% endif %}
+{% endif %}
+{# insert other inet4 options #}

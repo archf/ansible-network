@@ -1,5 +1,5 @@
-Role Name
-=========
+ansible-network
+===============
 
 Configure network devices on a target host. This roles aims to provide a seemless
 rhel or debian derivatives configuration experience.
@@ -35,6 +35,7 @@ List of variables to describing a device:
 | device        | device name                                        | <name>              | dict |
 | type          | device type                                        | see type table      | dict |
 | stp           | on by default, force stp off when device == bridge | on,off              | dict |
+| bridge        | specify bridge to attach device to                 | <name>              | dict |
 | bootproto     | specify boot protocol                              | static or none,dhcp | dict |
 | onboot        | bring up at boot time                              | yes,no              | dict |
 | gw            | gateway list of ipv4 and ipv6 cidr                 | <gateway ip>        | dict |

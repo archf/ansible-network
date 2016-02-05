@@ -5,33 +5,33 @@
 - name: load OS specific variables (see roles/*/vars/*)
   include_vars: "{{ ansible_os_family }}.yml"
 
-- name: install network packages
-  package: name={{ network_pkgs }} state={{ network_pkg_state }}
+# - name: install network packages
+#   package: name={{ network_pkgs }} state={{ network_pkg_state }}
 
-- name: install openvswitch package only when required
-  package: name={{ network_ovs_pkg }} state={{ network_pkg_state }}
-  when: "'obsbridge' in network|selectattr('type', 'defined')|map(attribute='type')|list"
+# - name: install openvswitch package only when required
+#   package: name={{ network_ovs_pkg }} state={{ network_pkg_state }}
+#   when: "'obsbridge' in network|selectattr('type', 'defined')|map(attribute='type')|list"
 
-- name: start and enable openvswitch package only when required
-  service: name={{ network_ovs_service }} state=started
-  when: "'obsbridge' in network|selectattr('type', 'defined')|map(attribute='type')|list"
+# - name: start and enable openvswitch package only when required
+#   service: name={{ network_ovs_service }} state=started
+#   when: "'obsbridge' in network|selectattr('type', 'defined')|map(attribute='type')|list"
 
 - name: template /etc/network/interfaces on Debian machines
   template:
     src: "{{ ansible_os_family }}_interfaces.j2"
-    dest: "{{ network_conf_path }}/interfaces"
+    dest: /etc/network/interfaces
     mode: 0644
-  with_items: network
+  with_items: "{{network}}"
   when: network is defined and ansible_os_family == 'Debian'
   register: changed_devices
   notify: restart ifaces
 
-- name: template network devices files
+- name: template network devices' files
   template:
     src: "{{ ansible_os_family }}_device.j2"
     dest: "{{ network_conf_path }}/{{network_device_file_prefix}}{{ item.device }}"
     mode: 0644
-  with_items: network
+  with_items: "{{network}}"
   when: network is defined
   register: changed_devices
   notify: restart ifaces
@@ -41,17 +41,17 @@
     src: "{{ ansible_os_family }}_routes.j2"
     dest: "{{ network_conf_path }}/route-{{ item.device }}"
     mode: 0644
-  with_items: network
+  with_items: "{{network}}"
   when: network is defined and ansible_os_family == 'RedHat'
   notify: change routes
 
 - debug: msg={{ network|map(attribute='device')|list}}
 
-- name: cleanup unrequired devices files
+- name: cleanup unrequired device files
   file:
     dest: "{{ network_conf_path }}/{{network_device_file_prefix}}{{ item }}"
     state: absent
-  with_items: ansible_interfaces
+  with_items: "{{ansible_interfaces}}"
   when: item not in "{{ network|map(attribute='device')|list }}" and item not in network_unmanaged_devices
   notify: del devices
 
@@ -59,7 +59,7 @@
   file:
     dest: "{{ network_conf_path }}/route-{{ item }}"
     state: absent
-  with_items: ansible_interfaces
+  with_items: "{{ansible_interfaces}}"
   when: item not in "{{ network|map(attribute='device')|list }}" and item not in network_unmanaged_devices
   notify: del devices
 
@@ -68,9 +68,10 @@
   # must be done before we template the file
 - name: register permanent system routes
   command: cat {{ network_conf_path }}/route-{{ item.device }}
-  with_items: network
+  with_items: "{{network}}"
   ignore_errors: true
   always_run: true
   register: network_permanent_routes
+  when: ansible_os_family != "Debian"
 
 # - debug: var=network_permanent_routes.results

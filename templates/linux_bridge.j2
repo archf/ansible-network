@@ -1,0 +1,11 @@
+{% if item.bridge_ports is undefined %}
+  bridge_ports none
+{% elif item.bridge_ports is defined %}
+  bridge_ports  {{ item.bridge_ports|join(' ') }}
+{% endif %}
+{# insert bridge options #}
+{% if item.bridge_opts is defined %}
+{% for key,value in bridge_opts.iter() %}
+  {{ key }}   {{ value }}
+{% endfor %}
+{% endif %}

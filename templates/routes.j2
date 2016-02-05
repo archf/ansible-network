@@ -1,0 +1,39 @@
+{# default route special case #}
+{% if item.routes is defined and (item.routes|length == 1) and (item.routes[0].to == 'default') %}
+{% if ansible_os_family == 'Redhat' %}
+default via dev {{ item.device }}
+{% elif ansible_os_family == 'Debian' %}
+  post-up ip route add default via dev {{ item.device }}
+{% endif %}
+{# routes var undefined case #}
+{% elif (item.routes is defined) and (item.routes[0].to != 'default') %}
+{% for route in item.routes %}
+{% if ansible_os_family == 'Redhat' %}
+{{ route.to }} via {{ item.gw | ipv4 }}
+{% elif ansible_os_family == 'Debian'  and inet == 'inet' %}
+ # routes
+ post-up ip route add {{ route.to }} via {{ item.gw | ipv4 }}
+{% elif ansible_os_family == 'Debian'  and inet == 'inet6' %}
+ {{'#'}} routes
+ post-up ip route add {{ route.to }} via {{ item.gw | ipv6 }}
+{% endif %}
+{% endfor %}
+{# static ips for sdn devices #}
+{% elif (item.routes is undefined) and (item.ips is defined) %}
+{#
+  useful for local brigdes, defining the routes may avoid duplicated default
+  gateway issues when restarting the network service
+#}
+{% for ip in item.ips %}
+{% if ansible_os_family == 'Redhat' %}
+{{ ip | ipsubnet(ip | ipaddr('prefix'),0) }} via {{ item.gw }}
+{{ ip | ipsubnet(ip | ipaddr('prefix'),0) }} via {{ item.gw | ipv4 }}
+{#
+{% elif ansible_os_family == 'Debian'  and inet == 'inet' %}
+  post-up ip route add {{ ip | ipsubnet(ip | ipaddr('prefix'),0) }} via {{ item.gw | ipv4 }}
+{% elif ansible_os_family == 'Debian'  and inet == 'inet6' %}
+  post-up ip route add {{ ip | ipsubnet(ip | ipaddr('prefix'),0) }} via {{ item.gw | ipv6 }}
+#}
+{% endif %}
+{% endfor %}
+{% endif %}
