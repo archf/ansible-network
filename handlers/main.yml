@@ -12,16 +12,12 @@
   with_items: ansible_interfaces
   when: item not in "{{ network|map(attribute='device')|list }}" and item not in network_unmanaged_devices
 
-  # # edit change iface without restarting interface
-# - name: change ip
-  # command
-
 - name: change routes
   command: ip route replace {{ item.1 }}
   with_subelements:
     - network_permanent_routes.results
     - stdout_lines
-  when: "'default' not in item.1 and 0.0.0.0 not in item.1"
+  # when: "'default' not in item.1 and 0.0.0.0 not in item.1"
 
 # - name: change routes
 #   command: ip route replace

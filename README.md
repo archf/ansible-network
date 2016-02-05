@@ -119,7 +119,7 @@ network_unmanaged_devices:
   - vibr0
 ```
 
-You can map those variables to the matching unprefixed variable inside a device.
+You can map most of those variables to the matching unprefixed variable inside a device.
 
 Dependencies
 ------------
@@ -150,12 +150,9 @@ Todo
 * improve route template
   * scope support
   * type support
-* improve device handler -> reconfigure a live ip interface with ip commands
+* improve device handler -> reconfigure live ip addr with ip commands
+* improve device handler -> reconfigure live routes with ip commands
 * make it work on ubuntu//debian
-* enable ipv6 nating on linux bridges
-  * ipv6/conf/all/forwarding=1
-  * /net/ipv6/conf/${BRIDGE}/autoconf=0
-  * ip6tables -w -t nat -A POSTROUTING -s ${IPV6_NETWORK} ! -d ${IPV6_NETWORK} -j
 
 PR welcomed !!!
 
@@ -179,14 +176,47 @@ sudo nft add rule nat postrouting masquerade
 Replace vars with according to your needs.
 
 ```bash
-LXC_BRIDGE=lxcbr1
+LXC_BRIDGE=lxcbr0
 LXC_NETWORK=192.168.0.1
 use_iptables_lock="-w"
 echo 1 > /proc/sys/net/ipv4/ip_forward
-iptables -w -L -n > /dev/null 2>&1 || use_iptables_lock=""
+iptables $use_iptables_lock -I INPUT -i ${LXC_BRIDGE} -p udp --dport 67 -j ACCEPT
+iptables $use_iptables_lock -I INPUT -i ${LXC_BRIDGE} -p tcp --dport 67 -j ACCEPT
+iptables $use_iptables_lock -I INPUT -i ${LXC_BRIDGE} -p udp --dport 53 -j ACCEPT
+iptables $use_iptables_lock -I INPUT -i ${LXC_BRIDGE} -p tcp --dport 53 -j ACCEPT
 iptables $use_iptables_lock -I FORWARD -i ${LXC_BRIDGE} -j ACCEPT
 iptables $use_iptables_lock -I FORWARD -o ${LXC_BRIDGE} -j ACCEPT
 iptables $use_iptables_lock -t nat -A POSTROUTING -s ${LXC_NETWORK} ! -d ${LXC_NETWORK} -j MASQUERADE
+iptables $use_iptables_lock -t mangle -A POSTROUTING -o ${LXC_BRIDGE} -p udp -m udp --dport 68 -j CHECKSUM --checksum-fill
+```
+
+## enable ipv6 forwarding on bridge
+
+```bash
+LXC_BRIDGE=lxcbr0
+echo 1 > /proc/sys/net/ipv6/conf/all/forwarding
+echo 2 > /proc/sys/net/ipv6/conf/all/accept_ra
+echo 1 > /proc/sys/net/ipv6/conf/all/accept_ra_from_local
+s sysctl -w net.ipv6.conf.all.accept_ra_from_local=1
+s sysctl -w net.ipv6.conf.all.accept_ra_defrtr=1
+
+echo 1 > /proc/sys/net/ipv6/conf/${LXC_BRIDGE}/forwarding
+echo 2 > /proc/sys/net/ipv6/conf/${LXC_BRIDGE}/accept_ra
+s sysctl -w net.ipv6.conf.lxcbr0.accept_ra_from_local=1
+
+echo 0 > /proc/sys/net/ipv6/conf/${LXC_BRIDGE}/autoconf
+echo 0 \> /proc/sys/net/ipv6/conf/\${LXC\_BRIDGE}/accept\_dad || true
+
+LXC_BRIDGE=lxcbr0
+LXC_IPV6_NETWORK=fd56:db20:4808:25ae::/64
+use_iptables_lock="-w"
+ip6tables $use_iptables_lock -I INPUT -i ${LXC_BRIDGE} -p udp --dport 67 -j ACCEPT
+ip6tables $use_iptables_lock -I INPUT -i ${LXC_BRIDGE} -p tcp --dport 67 -j ACCEPT
+ip6tables $use_iptables_lock -I INPUT -i ${LXC_BRIDGE} -p udp --dport 53 -j ACCEPT
+ip6tables $use_iptables_lock -I INPUT -i ${LXC_BRIDGE} -p tcp --dport 53 -j ACCEPT
+ip6tables $use_iptables_lock -I FORWARD -i ${LXC_BRIDGE} -j ACCEPT
+ip6tables $use_iptables_lock -I FORWARD -o ${LXC_BRIDGE} -j ACCEPT
+ip6tables $use_iptables_lock -t nat -A POSTROUTING -s ${LXC_IPV6_NETWORK} ! -d ${LXC_IPV6_NETWORK} -j MASQUERADE
 ```
 
 License

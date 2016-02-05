@@ -12,6 +12,10 @@
   package: name={{ network_ovs_pkg }} state={{ network_pkg_state }}
   when: "'obsbridge' in network|selectattr('type', 'defined')|map(attribute='type')|list"
 
+- name: start and enable openvswitch package only when required
+  service: name={{ network_ovs_service }} state=started
+  when: "'obsbridge' in network|selectattr('type', 'defined')|map(attribute='type')|list"
+
 - name: template /etc/network/interfaces on Debian machines
   template:
     src: "{{ ansible_os_family }}_interfaces.j2"
@@ -51,6 +55,14 @@
   when: item not in "{{ network|map(attribute='device')|list }}" and item not in network_unmanaged_devices
   notify: del devices
 
+- name: cleanup unrequired route files on rhel
+  file:
+    dest: "{{ network_conf_path }}/route-{{ item }}"
+    state: absent
+  with_items: ansible_interfaces
+  when: item not in "{{ network|map(attribute='device')|list }}" and item not in network_unmanaged_devices
+  notify: del devices
+
   # get wanted permanently configured static routes
   # ignore errors as file may not exist
   # must be done before we template the file
@@ -60,3 +72,5 @@
   ignore_errors: true
   always_run: true
   register: network_permanent_routes
+
+# - debug: var=network_permanent_routes.results
