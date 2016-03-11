@@ -28,6 +28,8 @@ Role Variables
 
 ## Device variables
 
+I try as much as possible to follow the semantic of iproute2 commands.
+
 List of variables to describing a device:
 
 | variable      | description                                        | value               | type |
@@ -165,13 +167,51 @@ Interesting Tips
 cd /etc/sysconfig/network-scripts && grep -r -E -o '\{[a-zA-Z0-9]+\}'  | grep -E -i -I -v 'device|1|2|down|ppp|down' | uniq -u
 ```
 
-## quick nating using nftables wip
+## show your current kernel network config
+
+```bash
+
+echo 'device configuration
+sysctl -a  -r 'net.ipv(4|6).conf.(eno1|lxcbr0|enp1s2)'
+
+echo 'show global config'
+sysctl -a  -r 'net.ipv(4|6).conf.(all|default)'
+```
+
+## configure your network stack
+
+```bash
+
+sudo sysctl -w net.ipv4.ip_forward=1
+
+sudo sysctl -w net.ipv6.conf.all.forwarding=1
+sudo sysctl -w net.ipv6.conf.all.accept_ra=1
+sudo sysctl -w net.ipv6.conf.all.accept_ra_from_local=1
+sudo sysctl -w net.ipv6.conf.all.accept_ra_from_local=1
+sudo sysctl -w net.ipv6.conf.all.accept_ra_defrtr=1
+
+LXC_BRIDGE=lxcbr0
+sudo sysctl -w net.ipv4.ip_forward=1
+sudo sysctl -w net.ipv6.conf.${LXC_BRIDGE}.forwarding=1
+sudo sysctl -w net.ipv6.conf.${LXC_BRIDGE}.accept_ra=2
+sudo sysctl -w net.ipv6.conf.${LXC_BRIDGE}.accept_ra_from_local=1
+sudo sysctl -w net.ipv6.conf.${LXC_BRIDGE}.autoconf=0
+sudo sysctl -w net.ipv6.conf.${LXC_BRIDGE}.accept_dad=0
+
+# proxy arp
+LXC_BRIDGE=lxcbr0
+sudo sysctl -w net.ipv4.conf.${LXC_BRIDGE}.proxy_arp=1
+ARP_DEV=eno1
+sudo sysctl -w net.ipv4.conf.${ARP_DEV}.proxy_arp=1
+```
+
+## quick nating using nftables (wip)
 sudo nft add table nat
 sudo nft add chain nat prerouting { type nat hook prerouting priority 0 \; }
 sudo nft add rule nat postrouting masquerade
 ```
 
-## lxc bridge ipv4 nating
+## lxc bridge iptables ipv4 nating
 
 Replace vars with according to your needs.
 
@@ -219,6 +259,21 @@ ip6tables $use_iptables_lock -I FORWARD -o ${LXC_BRIDGE} -j ACCEPT
 ip6tables $use_iptables_lock -t nat -A POSTROUTING -s ${LXC_IPV6_NETWORK} ! -d ${LXC_IPV6_NETWORK} -j MASQUERADE
 ip6tables $use_iptables_lock -t mangle -A POSTROUTING -o ${LXC_BRIDGE} -p udp -m udp --dport 68 -j CHECKSUM --checksum-fill
 ```
+
+## configuration using nftables.
+
+See this [firetable](https://github.com/archf/firetables) project
+
+## enable/disable checksum offloading
+
+```bash
+sudo ethtool --show-offload lxcbr0
+```
+
+to disable:
+
+```bash
+sudo ethtool --offload lxcbr0 rx off tx off
 
 License
 -------
