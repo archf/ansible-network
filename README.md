@@ -1,35 +1,46 @@
-ansible-network
-===============
+# ansible-network
 
-Configure network devices on a target host. This roles aims to provide a seemless
-rhel or debian derivatives configuration experience.
+Configure network devices on a target host.
 
-There are 4 templates:
+## Requirements
 
-For FEDORA | RHEL | CENTOS:
-  * Redhat_routes.j2      -> routes-* configuration files
-  * Redhat_device.j2      -> ifcfg-* device files in `/etc/sysconfig/network-scripts/`
+### Ansible version
 
-For DEBIAN | UBUNTU:
-  * Debian_interfaces.j2  -> main file `/etc/network/interfaces`
-  * Debian_devices.j2     -> device file that goes in `/etc/network/interfaces.d/`
+Minimum required ansible version is 2.0.
 
-Requirements
-------------
+### Other considerations
 
-For real devices, you must know your devices' names beforehand. You also need to have `python-netaddr` on your control machine.
+For real devices, you must know your devices' names beforehand. You also need
+to have `python-netaddr` on your control machine.
 
 ```bash
 sudo pip install python-netaddr
 ```
 
-Role Variables
---------------
 
-## Device variables
+## Description
 
-List of variables to describing a device:
 
+Configure network devices on a target host. This roles aims to provide a seemless
+rhel or debian derivatives configuration experience.
+
+### Templates
+
+There are 4 templates.
+
+For FEDORA | RHEL | CENTOS
+  * Redhat_routes.j2      -> routes-* configuration files
+  * Redhat_device.j2      -> ifcfg-* device files in `/etc/sysconfig/network-scripts/`
+
+For DEBIAN | UBUNTU
+  * Debian_interfaces.j2  -> main file `/etc/network/interfaces`
+  * Debian_devices.j2     -> device file that goes in `/etc/network/interfaces.d/`
+
+### Configuration table
+
+List of variables to describing a device
+
+```
 | variable      | description                                        | value               | type |
 |---------------|----------------------------------------------------|---------------------|------|
 | device        | device name                                        | <name>              | dict |
@@ -50,6 +61,7 @@ List of variables to describing a device:
 | ipv4_fatal    | disable device on failure                          | yes,no              | dict |
 | ipv6_autoconf | stateless configuration                            | yes,no              | dict |
 | ipv6_router   | node is an ipv6 router (enables ipv6 forwarding)   | yes,no              | dict |
+```
 
 * type=ovsbridge is supported
 * stp is always enabled for bridge devices unless you explicitly turn it off
@@ -59,8 +71,9 @@ List of variables to describing a device:
 * if and ipv6 addr is not in cidr notation, will default to a /64 prefix.
 * ipv6 is always enabled.
 
-type:
+Device types
 
+```
 | value     | description                   |
 |-----------|-------------------------------|
 | Ethernet  | real physical ethernet device |
@@ -68,111 +81,43 @@ type:
 | ovsbridge | openvswitch bridge            |
 | bond      | bond several devices together |
 | 6to4      | 6to4 tunnel                   |
+```
 
-Notes:
+_Notes_
   * bond support not yet implemented
   * to detrunk a vlan, simply create a device using `<device name>.<vlan_id>` as device name
 
-routes:
+*Routes*
 
+```
 | Variables | description  | value                                       | type |
 |-----------|--------------|---------------------------------------------|------|
 | to        | route target | cidr ip (or any value accepted by ip route) | dict |
 | gw        | gw device    | /32 ip address*                             | dict |
+```
 
- Notes:
-  *if no specific gw is provided, it will default to the device gateway
+Notes:
+  * if no specific gw is provided, it will default to the device gateway
   * to avoid duplicate default gateway, routes are defined for each devices based on subnet and subnet mask
 
-## Defaults
+### Interesting Tips
 
- Here are the defaults.
+¡This sections needs a cleanup!
 
-```yaml
-network_pkg_state: latest
-
-# device defaults
-network_onboot: 'yes'
-network_peerdns: 'no'
-network_device_type: Ethernet
-
-# ethernet defaults
-network_ethernet_linkdelay: 1
-
-# bridge defaults
-network_bridge_delay: 1
-
-# ipv4 defaults
-network_ipv4_fatal: 'no'
-
-# ipv6 defaults
-network_ipv6_init: 'yes'
-network_ipv6_fatal: 'no'
-network_ipv6_autoconf: 'no'
-network_ipv6_router: 'no'
-network_ipv6_forwarding: 'no'
-
-# prevent deletion on cleanup
-network_unmanaged_devices:
-  - lo
-  - ovs-system
-  - vboxnet0
-  - vibr0
-```
-
-You can map most of those variables to the matching unprefixed variable inside a device.
-
-Dependencies
-------------
-
-python-netaddr.
-
-Example Playbook
-----------------
-
-## Device configuration
-
-You must define a network variable wich contain a list of devices. Interface
-template is designed to minimise typing.
-
-Here's a collection of device to create(see how short it is and how and lazy you can be):
-
-And invoke your play as usual:
-
-```yaml
-- hosts: servers
-  roles:
-      - { role: archf.network }
-```
-
-Todo
-------
-
-* improve route template
-  * scope support
-  * type support
-* improve device handler -> reconfigure live ip addr with ip commands
-* improve device handler -> reconfigure live routes with ip commands
-* make it work on ubuntu//debian
-
-PR welcomed !!!
-
-Interesting Tips
------------------
-
-## list all fedora|rhel|centos usable device options
+List all fedora|rhel|centos usable device options.
 
 ```bash
 cd /etc/sysconfig/network-scripts && grep -r -E -o '\{[a-zA-Z0-9]+\}'  | grep -E -i -I -v 'device|1|2|down|ppp|down' | uniq -u
 ```
 
-## quick nating using nftables wip
+```bash
+# quick nating using nftables wip
 sudo nft add table nat
 sudo nft add chain nat prerouting { type nat hook prerouting priority 0 \; }
 sudo nft add rule nat postrouting masquerade
 ```
 
-## lxc bridge nating
+*lxc bridge nating*
 
 Replace vars with according to your needs.
 
@@ -191,7 +136,7 @@ iptables $use_iptables_lock -t nat -A POSTROUTING -s ${LXC_NETWORK} ! -d ${LXC_N
 iptables $use_iptables_lock -t mangle -A POSTROUTING -o ${LXC_BRIDGE} -p udp -m udp --dport 68 -j CHECKSUM --checksum-fill
 ```
 
-## enable ipv6 forwarding on bridge
+*enable ipv6 forwarding on bridge*
 
 ```bash
 LXC_BRIDGE=lxcbr0
@@ -220,12 +165,185 @@ ip6tables $use_iptables_lock -I FORWARD -o ${LXC_BRIDGE} -j ACCEPT
 ip6tables $use_iptables_lock -t nat -A POSTROUTING -s ${LXC_IPV6_NETWORK} ! -d ${LXC_IPV6_NETWORK} -j MASQUERADE
 ```
 
-License
--------
 
-MIT
+## Role Variables
 
-Author Information
-------------------
+### Variables conditionally loaded
 
-Felix Archambault
+Those variables from `vars/*.{yml,json}` are loaded dynamically during task
+runtime using the `include_vars` module.
+
+Variables loaded from `vars/main.yml`.
+
+```yaml
+# vars file for network
+
+```
+
+Variables loaded from `vars/Debian.yml`.
+
+```yaml
+network_pkgs:
+  - bridge-utils
+  - ifenslave
+
+network_ovs_service: openvswitch-nonetwork.service
+network_ovs_pkg: openvswitch-switch
+
+network_conf_path: "/etc/network/interfaces.d"
+network_device_file_prefix: ''
+
+```
+
+Variables loaded from `vars/RedHat.yml`.
+
+```yaml
+network_pkgs:
+  - libselinux-python
+  - bridge-utils
+  - iputils
+
+network_ovs_service: openvswitch.service
+network_ovs_pkg: openvswitch
+
+network_conf_path: "/etc/sysconfig/network-scripts"
+network_device_file_prefix: "ifcfg-"
+
+```
+
+### Default vars
+
+Defaults from `defaults/main.yml`.
+
+```yaml
+# defaults file for network
+
+network_pkg_state: latest
+
+# device defaults
+network_onboot: 'yes'
+network_peerdns: 'no'
+network_device_type: Ethernet
+
+# ethernet defaults
+network_ethernet_linkdelay: 1
+
+# bridge defaults
+network_bridge_delay: 1
+
+# ipv4 defaults
+network_ipv4_fatal: 'no'
+
+# RHEL ipv6 defaults
+network_ipv6_init: 'yes'
+network_ipv6_fatal: 'no'
+network_ipv6_autoconf: 'no'
+network_ipv6_router: 'no'
+network_ipv6_forwarding: 'no'
+
+# Debian ifupdown ipv6 defaults
+# see http://manpages.ubuntu.com/manpages/wily/en/man5/interfaces.5.html
+
+# accept_ra default value differ according to method
+#   dhcp -> 1
+#   static -> 2
+#   auto -> 2
+network_accept_ra: 1        # (0=off, 1=on, 2=on+forwarding)
+network_dhcp: 0             # auto method -> use stateless DHCPv6 (0=off, 1=on)
+
+network_autoconf: 0         # Perform stateless autoconfiguration (0=off, 1=on)
+network_dad_attempts: 60    # Number of attempts to settle DAD (0 to disable)
+network_dad_interval: 0.1   # DAD state polling interval in seconds
+
+# prevent deletion on cleanup
+network_unmanaged_devices:
+  - lo
+  - ovs-system
+  - vboxnet0
+  - vibr0
+
+```
+
+
+## Installation
+
+### Install with Ansible Galaxy
+
+```shell
+ansible-galaxy install archf.network
+```
+
+Basic usage is:
+
+```yaml
+- hosts: all
+  roles:
+    - role: archf.network
+```
+
+### Install with git
+
+If you do not want a global installation, clone it into your `roles_path`.
+
+```shell
+git clone git@github.com:archf/ansible-network.git /path/to/roles_path
+```
+
+But I often add it as a submdule in a given `playbook_dir` repository.
+
+```shell
+git submodule add git@github.com:archf/ansible-network.git <playbook_dir>/roles/network
+```
+
+As the role is not managed by Ansible Galaxy, you do not have to specify the
+github user account.
+
+Basic usage is:
+
+```yaml
+- hosts: all
+  roles:
+  - role: network
+```
+
+## Ansible role dependencies
+
+None.
+
+## Todo
+
+  * improve route template (scope & type support)
+  * improve device handler -> reconfigure live ip addr with ip commands
+  * improve device handler -> reconfigure live routes with ip commands
+  * make it work on ubuntu//debian
+
+## License
+
+MIT.
+
+## Author Information
+
+Felix Archambault.
+
+## Role stack
+
+This role was carefully selected to be part an ultimate deck of roles to manage
+your infrastructure.
+
+All roles' documentation is wrapped in this [convenient guide](http://127.0.0.1:8000/).
+
+
+---
+This README was generated using ansidoc. This tool is available on pypi!
+
+```shell
+pip3 install ansidoc
+
+# validate by running a dry-run (will output result to stdout)
+ansidoc --dry-run <rolepath>
+
+# generate you role readme file
+ansidoc <rolepath>
+```
+
+You can even use it programatically from sphinx. Check it out.
