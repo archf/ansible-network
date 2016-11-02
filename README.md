@@ -180,6 +180,21 @@ Variables loaded from `vars/main.yml`.
 
 ```
 
+Variables loaded from `vars/Debian.yml`.
+
+```yaml
+network_pkgs:
+  - bridge-utils
+  - ifenslave
+
+network_ovs_service: openvswitch-nonetwork.service
+network_ovs_pkg: openvswitch-switch
+
+network_conf_path: "/etc/network/interfaces.d"
+network_device_file_prefix: ''
+
+```
+
 Variables loaded from `vars/RedHat.yml`.
 
 ```yaml
@@ -193,21 +208,6 @@ network_ovs_pkg: openvswitch
 
 network_conf_path: "/etc/sysconfig/network-scripts"
 network_device_file_prefix: "ifcfg-"
-
-```
-
-Variables loaded from `vars/Debian.yml`.
-
-```yaml
-network_pkgs:
-  - bridge-utils
-  - ifenslave
-
-network_ovs_service: openvswitch-nonetwork.service
-network_ovs_pkg: openvswitch-switch
-
-network_conf_path: "/etc/network/interfaces.d"
-network_device_file_prefix: ''
 
 ```
 
