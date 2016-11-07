@@ -2,18 +2,18 @@
 # handlers file for network
 
 - name: restart ifaces
-  shell: ifdown {{ item.item.device }}; ifup {{ item.item.device }}
+  shell: ifdown {{item.item.device}}; ifup {{item.item.device }}
   with_items: changed_devices.results
   when: item.changed
   # service: name=network state=restarted
 
 - name: del devices
-  shell: ip link delete {{ item }} || ovs-vsctl del-br {{item}}
+  shell: ip link delete {{item}} || ovs-vsctl del-br {{item}}
   with_items: ansible_interfaces
-  when: item not in "{{ network|map(attribute='device')|list }}" and item not in network_unmanaged_devices
+  when: item not in "{{network|map(attribute='device')|list}}" and item not in network_unmanaged_devices
 
 - name: change routes
-  command: ip route replace {{ item.1 }}
+  command: ip route replace {{item.1}}
   with_subelements:
     - network_permanent_routes.results
     - stdout_lines

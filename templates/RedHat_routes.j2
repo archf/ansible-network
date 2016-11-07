@@ -1,10 +1,10 @@
 {# default route special case #}
 {% if item.routes is defined and (item.routes|length == 1) and (item.routes[0].to == 'default') %}
-default via dev {{ item.device }}
+default via dev {{item.device}}
 {# routes var undefined case #}
 {% elif (item.routes is defined) and (item.routes[0].to != 'default') %}
 {% for route in item.routes %}
-{{ route.to }} via {{ route.gw|default(item.gw) }}
+{{route.to}} via {{route.gw|default(item.gw)}}
 {% endfor %}
 {# static ips for sdn devices #}
 {% elif (item.routes is undefined) and (item.ips is defined) %}
@@ -13,6 +13,6 @@ default via dev {{ item.device }}
   gateway issues when restarting the network service
 #}
 {% for ip in item.ips %}
-{{ ip | ipsubnet(ip | ipaddr('prefix'),0) }} via {{ item.gw }}
+{{ip | ipsubnet(ip | ipaddr('prefix'),0)}} via {{item.gw}}
 {% endfor %}
 {% endif %}

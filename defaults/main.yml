@@ -1,44 +1,48 @@
 ---
-# defaults file for network
 
+# Package state.
 network_pkg_state: latest
 
-# device defaults
-network_onboot: 'yes'
-network_peerdns: 'no'
-network_device_type: Ethernet
+# Disable debugging by default
+network_debug: no
 
-# ethernet defaults
-network_ethernet_linkdelay: 1
+# Device defaults.
+network:
+  onboot: 'yes'
+  peerdns: 'no'
+  device_type: Ethernet
 
-# bridge defaults
-network_bridge_delay: 1
+  # Ethernet defaults
+  ethernet_linkdelay: 1
 
-# ipv4 defaults
-network_ipv4_fatal: 'no'
+  # Bridge defaults
+  bridge_delay: 1
 
-# RHEL ipv6 defaults
-network_ipv6_init: 'yes'
-network_ipv6_fatal: 'no'
-network_ipv6_autoconf: 'no'
-network_ipv6_router: 'no'
-network_ipv6_forwarding: 'no'
+  # Ipv4 defaults
+  ipv4_fatal: 'no'
 
-# Debian ifupdown ipv6 defaults
-# see http://manpages.ubuntu.com/manpages/wily/en/man5/interfaces.5.html
+  # RHEL ipv6 defaults
+  ipv6_init: 'yes'
+  ipv6_fatal: 'no'
+  ipv6_autoconf: 'no'
+  ipv6_router: 'no'
+  ipv6_forwarding: 'no'
 
-# accept_ra default value differ according to method
-#   dhcp -> 1
-#   static -> 2
-#   auto -> 2
-network_accept_ra: 1        # (0=off, 1=on, 2=on+forwarding)
-network_dhcp: 0             # auto method -> use stateless DHCPv6 (0=off, 1=on)
+  # Debian ifupdown ipv6 defaults
+  # see http://manpages.ubuntu.com/manpages/wily/en/man5/interfaces.5.html
 
-network_autoconf: 0         # Perform stateless autoconfiguration (0=off, 1=on)
-network_dad_attempts: 60    # Number of attempts to settle DAD (0 to disable)
-network_dad_interval: 0.1   # DAD state polling interval in seconds
+  # accept_ra default value differ according to method
+  #   dhcp -> 1
+  #   static -> 2
+  #   auto -> 2
+  accept_ra: 1        # (0=off, 1=on, 2=on+forwarding)
+  dhcp: 0             # auto method -> use stateless DHCPv6 (0=off, 1=on)
 
-# prevent deletion on cleanup
+  autoconf: 0         # Perform stateless autoconfiguration (0=off, 1=on)
+  dad_attempts: 60    # Number of attempts to settle DAD (0 to disable)
+  dad_interval: 0.1   # DAD state polling interval in seconds
+
+# Prevent deletion on cleanup. Those devices are completely ignored.
 network_unmanaged_devices:
   - lo
   - ovs-system

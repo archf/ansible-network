@@ -1,0 +1,7 @@
+---
+
+- name: install openvswitch package only when required
+  package: name={{network_ovs_pkg}} state={{network_pkg_state}}
+
+- name: start and enable openvswitch package only when required
+  service: name={{network_ovs_service}} state=started

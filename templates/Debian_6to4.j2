@@ -1,18 +1,18 @@
 {% if item.ip is defined %}
-  local {{ item.ip }}
+  local {{item.ip}}
 {% endif %}
 {% if item.ttl is defined %}
-  ttl {{ item.ttl }}
+  ttl {{item.ttl}}
 {% endif %}
 {% if item.scope is defined %}
-  scope {{ item.scope }}
+  scope {{item.scope}}
 {% endif %}
 {% if item.metric is defined %}
-  scope {{ item.metric }}
+  scope {{item.metric}}
 {% endif %}
 {% if item.hwaddress is defined %}
-  hwaddress {{ item.hwaddress }}
+  hwaddress {{item.hwaddress}}
 {% endif %}
 {% if item.mtu is defined %}
-  mtu {{ item.mtu }}
+  mtu {{item.mtu}}
 {% endif %}

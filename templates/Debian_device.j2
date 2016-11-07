@@ -1,3 +1,4 @@
+{# master file that wraps all the othe Debian_* #}
 {% if item.onboot is undefined and item.type is undefined %}
 {# this is a physical Ethernet device #}
 auto {{ item.device }}
@@ -17,27 +18,27 @@ iface {{ item.device }} {{inet}} dhcp
 iface {{ item.device }} {{inet}} static
 {% if inet == 'inet' %}
 {# debian ipv4 family configuration #}
-{% include 'inet.j2' %}
+{% include 'Debian_inet.j2' %}
 {% elif inet == 'inet6' %}
-{% include 'inet6.j2' %}
+{% include 'Debian_inet6.j2' %}
 {% endif %}
 {# routes configuration #}
-{% include 'routes.j2' %}
+{% include 'Debian_routes.j2' %}
 {% elif item.bootproto is defined and item.bootproto == 'bootp' %}
 {# bootp options #}
 iface {{ item.device }} {{ inet }} bootp
-{% include 'bootp.j2' %}
+{% include 'Debian_bootp.j2' %}
 {% elif item.bootproto is defined and item.bootproto == '6to4' %}
 {# 6to4 tunnel options #}
 iface {{ item.device }} inet 6to4
-{% include '6to4.j2' %}
+{% include 'Debian_6to4.j2' %}
 {% endif %}
 {# configure device as a bridge #}
 {# see man bridge-utils-interfaces(5) for bridge details #}
 {% if item.type is defined and item.type|lower == "bridge" %}
-{% include 'linux_bridge.j2' %}
+{% include 'linux_native_bridge.j2' %}
 {% elif item.type is defined and item.type|lower == 'ovsbridge' %}
-{% include 'ovsbridge.j2' %}
+{% include 'Debian_ovs_bridge.j2' %}
 {% endif %}
 
 {% endfor %}

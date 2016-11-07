@@ -1,15 +1,15 @@
 {# name device #}
-DEVICE={{ item.device }}
-ONBOOT={{ item.onboot|default(network_onboot) }}
+DEVICE={{item.device}}
+ONBOOT={{item.onboot|default(network.onboot)}}
 {# device type #}
 {% if item.type is not defined %}
-TYPE={{ item.type|default(network_device_type) }}
+TYPE={{item.type|default(network.device_type)}}
 {% elif (item.type is defined) and (item.type|lower == 'bridge') %}
 TYPE=Bridge
 {% elif (item.type is defined) and (item.type|lower == 'ovsbridge') %}
 TYPE=OVSBridge
 {# upstream port to attach bridge to #}
-{{ 'OVSINTF=' ~ item.bridge if item.bridge is defined else '' }}
+{{'OVSINTF=' ~ item.bridge if item.bridge is defined else ''}}
 {% if (item.stp is defined) and (item.stp == 'no' or item.stp == 'off') %}
 {# needs to be on if mulitple L2 devices coexist, on by default #}
 # bridge options
@@ -21,7 +21,7 @@ STP=on
   time spent in each of the Listening and Learning states before the Forwarding
   state is entered. This delay is so that when a new bridge comes onto a busy
   network it looks at some traffic before participating.
-  DELAY={{ item.bridge_delay|default(network_bridge_delay) }}
+  DELAY={{item.bridge_delay|default(network.bridge_delay)}}
 #}
 {% endif %}
 {#
@@ -32,26 +32,26 @@ STP=on
   converge before the interface should be considered usable.
   #}
 {% if (item.type is undefined) or (item.type == 'ethernet') %}
-LINKDELAY={{ item.linkdelay|default(network_ethernet_linkdelay) }}
+LINKDELAY={{item.linkdelay|default(network.ethernet_linkdelay)}}
 {# bridge to join #}
 {% if (item.bridge is defined) and (item.bridge in ansible_interfaces) %}
-BRIDGE={{ item.bridge }}
+BRIDGE={{item.bridge}}
 {% endif %}
 {% endif %} {# end of ethernet only options #}
 
 {# defaults to no #}
-IPV4_FAILURE_FATAL={{ item.ipv4_fatal|default(network_ipv4_fatal) }}
+IPV4_FAILURE_FATAL={{item.ipv4_fatal|default(network.ipv4_fatal)}}
 
 {# ipv6 options #}
-IPV6INIT={{ item.ipv6_init|default(network_ipv6_init) }}
+IPV6INIT={{item.ipv6_init|default(network.ipv6_init)}}
 {% if (item.ipv6_init is defined and item.ipv6_init != 'no') or (item.ipv6_init is undefined) %}
-IPV6_FAILURE_FATAL={{ item.ipv6_fatal|default(network_ipv6_fatal) }}
+IPV6_FAILURE_FATAL={{item.ipv6_fatal|default(network.ipv6_fatal)}}
 
 # stateful addressing
-IPV6_AUTOCONF={{ item.ipv6_autoconf|default(network_ipv6_autoconf) }}
+IPV6_AUTOCONF={{item.ipv6_autoconf|default(network.ipv6_autoconf)}}
 
 # ipv6
-IPV6_ROUTER={{ item.ipv6_router|default(network_ipv6_router) }}
+IPV6_ROUTER={{item.ipv6_router|default(network.ipv6_router)}}
 {% endif %} {# end of ipv6 configuration #}
 {% if item.ipv6_router is defined %}
 IPV6_FORWARDING=yes
@@ -67,21 +67,21 @@ BOOTPROTO=none
 
 # static ipv4 configuration
 {% if item.gw is defined %}
-GATEWAY={{ item.gw | ipv4('address') }}
+GATEWAY={{item.gw | ipv4('address')}}
 {% endif %}
 {% if item.ips is defined %}
 {# loop to define multiple ips on interface #}
 {% for ip in item.ips | ipv4('host/prefix') %}
 {% if loop.length == 1 %}
-IPADDR={{ ip | ipaddr('address') }}
-PREFIX={{ ip | ipaddr('prefix') }}
+IPADDR={{ip | ipaddr('address')}}
+PREFIX={{ip | ipaddr('prefix')}}
 {% else %}
-IPADDR{{ loop.index0 }}={{ ip | ipaddr('address') }}
+IPADDR{{loop.index0}}={{ip | ipaddr('address')}}
 {#
 only use netmask for aliases and ippp devices,
 need prefix because redhat doesn't seem to accept cidr as an IPADDR...
 #}
-PREFIX{{ loop.index0 }}={{ ip | ipaddr('prefix') }}
+PREFIX{{loop.index0}}={{ip | ipaddr('prefix')}}
 {% endif %}
 {% endfor %} {# end of ipv4 static configuration loop #}
 {% endif %}  {# end of ipv4 #}
@@ -90,10 +90,10 @@ PREFIX{{ loop.index0 }}={{ ip | ipaddr('prefix') }}
 # static ipv6 configuration
 {% for ip in item.ips | ipv6('host/prefix') %}
 {% if loop.index == 1 %}
-IPV6ADDR={{ ip }}
+IPV6ADDR={{ip}}
 {% else %}
 {# declare all other ips as secondaries #}
-IPV6ADDR_SECONDAIRIES={{ ip }}
+IPV6ADDR_SECONDAIRIES={{ip}}
 {% endif %}
 {% endfor %}
 {% endif %} {# end of ipv6 static configuration #}
@@ -108,7 +108,7 @@ PEERDNS=no
 {% if item.dns is defined %}
 # DNS servers (will be appended to resolv.conf)
 {% for dns in item.dns %}
-DNS{{ loop.index }}={{ dns }}
+DNS{{loop.index}}={{dns}}
 {% endfor %}
 {% endif %}
 {% endif %} {# end of dns configuration #}
